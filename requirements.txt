@@ -12,3 +12,4 @@ librouteros
 nornir
 reportlab
 psutil
+paramiko

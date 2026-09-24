@@ -10,6 +10,61 @@ BACKUP_DIR.mkdir(exist_ok=True)
 
 DEVICES_FILE = CONFIG_DIR / "devices.yaml"
 
+# ── Deception / Honeypot ─────────────────────────────────────
+# Red señuelo con dispositivos simulados. Deshabilitada por defecto:
+# no se abre ningún puerto si NETPULSE_DECEPTION_ENABLED no es "true".
+DECEPTION_ENABLED = os.getenv("NETPULSE_DECEPTION_ENABLED", "false").lower() == "true"
+DECEPTION_DIR = CONFIG_DIR / "deception"
+DECEPTION_NETWORK_FILE = Path(
+    os.getenv("NETPULSE_DECEPTION_NETWORK_FILE", str(DECEPTION_DIR / "network.yaml"))
+)
+DECEPTION_DATA_DIR = BASE_DIR / "deception"
+DECEPTION_DATA_DIR.mkdir(exist_ok=True)
+DECEPTION_DB = DECEPTION_DATA_DIR / "deception.db"
+# Interfaz del bridge de deception (nunca la de gestión); usada por el
+# motor en modo paquete. Solo se acepta si NO coincide con la de gestión.
+DECEPTION_IFACE = os.getenv("NETPULSE_DECEPTION_IFACE", "deception0")
+# Token compartido con el data plane (Go/engine) para el endpoint de ingest.
+# Si está vacío, /api/deception/ingest exige JWT de administrador.
+DECEPTION_INGEST_TOKEN = os.getenv("NETPULSE_DECEPTION_INGEST_TOKEN", "")
+
+# Host de bind del motor nativo. Vacío = usar la IP de cada dispositivo
+# señuelo (comportamiento normal en la red aislada). En dev se puede
+# forzar a "127.0.0.1" para pruebas locales.
+DECEPTION_BIND_HOST = os.getenv("NETPULSE_DECEPTION_BIND_HOST", "")
+
+# Logs de honeypots reales (Fase C). El tailer los lee y normaliza.
+DECEPTION_COWRIE_LOG = os.getenv(
+    "NETPULSE_DECEPTION_COWRIE_LOG",
+    str(DECEPTION_DATA_DIR / "logs" / "cowrie" / "cowrie.json"),
+)
+DECEPTION_COWRIE_DEVICE = os.getenv("NETPULSE_DECEPTION_COWRIE_DEVICE", "srv-files-01")
+DECEPTION_OPENCANARY_LOG = os.getenv(
+    "NETPULSE_DECEPTION_OPENCANARY_LOG",
+    str(DECEPTION_DATA_DIR / "logs" / "opencanary" / "opencanary.log"),
+)
+DECEPTION_OPENCANARY_DEVICE = os.getenv(
+    "NETPULSE_DECEPTION_OPENCANARY_DEVICE", "sw-access-01"
+)
+
+# Alertas de deception: se disparan ante eventos de alto valor.
+DECEPTION_ALERTS_ENABLED = os.getenv(
+    "NETPULSE_DECEPTION_ALERTS_ENABLED", "true"
+).lower() == "true"
+# Segundos de silencio por (dispositivo, atacante, regla) para no saturar.
+DECEPTION_ALERT_COOLDOWN = int(os.getenv("NETPULSE_DECEPTION_ALERT_COOLDOWN", "60"))
+# Umbral de intentos de login desde una misma IP para alertar fuerza bruta.
+DECEPTION_BRUTE_FORCE_THRESHOLD = int(
+    os.getenv("NETPULSE_DECEPTION_BRUTE_FORCE_THRESHOLD", "5")
+)
+DECEPTION_BRUTE_FORCE_WINDOW = int(
+    os.getenv("NETPULSE_DECEPTION_BRUTE_FORCE_WINDOW", "60")
+)
+# Bloqueo automático de la IP atacante ante alertas de severidad critical.
+DECEPTION_AUTOBLOCK_CRITICAL = os.getenv(
+    "NETPULSE_DECEPTION_AUTOBLOCK_CRITICAL", "false"
+).lower() == "true"
+
 API_TITLE = "NetPulse API"
 API_VERSION = "1.0.0"
 API_HOST = os.getenv("NETPULSE_HOST", "0.0.0.0")

@@ -1646,6 +1646,10 @@
         grid-template-columns: 1fr
       }
 
+      .dcn-2col {
+        grid-template-columns: 1fr !important
+      }
+
       .header {
         padding: 0 16px
       }
@@ -2200,6 +2204,16 @@
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
           <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg> <span data-i18n="nav_2fa">2FA / TOTP</span></div>
+    </div>
+
+    <div class="sidebar-s" id="sb-deception">
+      <h3 data-i18n="nav_deception_section">DECEPTION</h3>
+      <div class="sidebar-item" onclick="swView('deception')"><svg class="si" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4l3 3" />
+          <path d="M4.5 4.5l15 15" />
+        </svg> <span data-i18n="nav_deception">Deception</span> <span class="badge" id="sb-dcn">0</span></div>
     </div>
 
     <div class="sidebar-s" id="sb-admin">
@@ -2971,6 +2985,90 @@
         </div>
       </div>
 
+      <div class="view" id="v-deception" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <h2 style="font-size:16px;font-weight:600" data-i18n="view_deception">🎭 Deception / Honeypot</h2>
+            <span id="dcn-engine" class="badge" style="background:#202124">—</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-p btn-sm" onclick="dcnSimulate()" title="Genera actividad de atacante de prueba">🧪 Simular ataque</button>
+            <button class="btn btn-o btn-sm" onclick="dcnExport()">⬇ CSV</button>
+            <button class="btn btn-o btn-sm" id="dcn-auto" onclick="dcnAutoToggle()" title="Auto-actualizar cada 5s">⏱ Auto: OFF</button>
+            <span style="width:1px;height:20px;background:var(--border)"></span>
+            <button class="btn btn-o btn-sm" onclick="dcnEngine('start')">▶</button>
+            <button class="btn btn-o btn-sm" onclick="dcnEngine('stop')">⏹</button>
+            <button class="btn btn-o btn-sm" onclick="loadDeception()" data-i18n="btn_refresh">🔄</button>
+          </div>
+        </div>
+
+        <div id="dcn-stats" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap"></div>
+
+        <div class="sc" style="padding:16px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 style="font-size:11px;color:var(--text-ter)">ACTIVIDAD (últimos 30 min)</h3>
+            <span style="font-size:11px;color:var(--text-ter)">eventos / minuto</span>
+          </div>
+          <div id="dcn-timeline" style="display:flex;align-items:flex-end;gap:2px;height:64px"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin-bottom:16px" class="dcn-2col">
+          <div class="sc" style="padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <h3 style="font-size:11px;color:var(--text-ter)">SUPERFICIE DE ATAQUE (VLANs y señuelos)</h3>
+              <button class="btn btn-o btn-sm" onclick="dcnToggleAdd()" title="Agregar dispositivo señuelo">➕</button>
+            </div>
+            <div id="dcn-addform" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <input id="dcn-a-id" placeholder="id (ej. cam-02)" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+                <select id="dcn-a-role" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+                  <option value="pc">pc</option><option value="server">server</option><option value="camera">camera</option>
+                  <option value="switch">switch</option><option value="firewall">firewall</option><option value="router">router</option>
+                </select>
+                <select id="dcn-a-seg" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)"></select>
+                <input id="dcn-a-ip" placeholder="IP (ej. 10.30.0.12)" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+                <input id="dcn-a-proto" placeholder="proto (ssh)" value="ssh" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+                <input id="dcn-a-port" placeholder="puerto (22)" value="22" type="number" style="padding:6px;background:var(--panel);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+              </div>
+              <button class="btn btn-p btn-sm" style="margin-top:8px" onclick="dcnAddDevice()">💾 Guardar dispositivo</button>
+            </div>
+            <div id="dcn-surface"></div>
+          </div>
+          <div class="sc" style="padding:16px">
+            <h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">ALERTAS RECIENTES</h3>
+            <div id="dcn-alerts"></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px" class="dcn-2col">
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">TOP ATACANTES</h3><div id="dcn-attackers"></div></div>
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">TOP DISPOSITIVOS SEÑUELO</h3><div id="dcn-devices"></div></div>
+          <div class="sc" style="padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <h3 style="font-size:11px;color:var(--text-ter)">BLOCKLIST</h3>
+              <button class="btn btn-o btn-sm" onclick="dcnExportIocs()" title="Exportar IOCs CSV">⬇ IOCs</button>
+            </div>
+            <div id="dcn-blocklist"></div>
+          </div>
+        </div>
+
+        <h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">SESIONES (dispositivo ← atacante)</h3>
+        <div id="dcn-sessions" style="margin-bottom:20px"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <h3 style="font-size:11px;color:var(--text-ter)">ÚLTIMOS EVENTOS</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="dcn-f-ip" placeholder="filtrar IP..." oninput="renderDcnEvents()"
+              style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text);width:130px">
+            <select id="dcn-f-type" onchange="renderDcnEvents()"
+              style="padding:5px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text)">
+              <option value="">todos los tipos</option>
+            </select>
+          </div>
+        </div>
+        <div id="dcn-events"></div>
+      </div>
+
       <div class="view" id="v-maintenance" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <h2 style="font-size:16px;font-weight:600" data-i18n="view_maint">🛠️ Ventanas de Mantenimiento</h2>
@@ -3144,7 +3242,7 @@
         nav_schedules: 'Schedules', nav_compare: 'Compare', nav_topology: 'Topology',
         nav_health: 'Health Scores', nav_maintenance: 'Maintenance', nav_security: 'SECURITY',
         nav_compliance: 'Compliance', nav_audit: 'Audit Trail', nav_events: 'Security Events',
-        nav_apikeys: 'API Keys', nav_2fa: '2FA / TOTP', nav_administration: 'ADMINISTRATION',
+        nav_apikeys: 'API Keys', nav_2fa: '2FA / TOTP', nav_deception: 'Deception', nav_deception_section: 'DECEPTION', nav_administration: 'ADMINISTRATION',
         nav_inventory: 'Device Inventory', nav_users: 'Users & Roles', nav_webhooks: 'Webhooks',
         nav_export: 'Export Data', nav_settings: 'Settings', nav_system: 'SYSTEM',
         sys_devices: 'Devices', btn_signout: 'Sign Out',
@@ -3164,7 +3262,7 @@
         view_comp: '✅ Compliance Validation', view_wh: '🔗 Webhooks / Notifications', view_admin: '⚙️ Administration',
         view_act: '📝 Security Activity', view_cmp: '⇄ Compare Configurations', view_audit_tbl: '📋 Audit Trail',
         view_topo: '🗺️ Network Topology', view_health: '💚 Health Scores', view_maint: '🛠️ Maintenance Windows',
-        view_keys: '🔑 API Keys',
+        view_keys: '🔑 API Keys', view_deception: '🎭 Deception / Honeypot',
 
         lbl_id: 'ID (Internal Name)', lbl_host: 'IP / Hostname', lbl_vendor: 'Manufacturer/OS', lbl_protocol: 'Protocol',
 
@@ -3183,7 +3281,7 @@
         nav_schedules: 'Programación', nav_compare: 'Comparar', nav_topology: 'Topología',
         nav_health: 'Estado de Salud', nav_maintenance: 'Mantenimiento', nav_security: 'SEGURIDAD',
         nav_compliance: 'Cumplimiento', nav_audit: 'Auditoría', nav_events: 'Eventos de Seguridad',
-        nav_apikeys: 'Llaves API', nav_2fa: '2FA / TOTP', nav_administration: 'ADMINISTRACIÓN',
+        nav_apikeys: 'Llaves API', nav_2fa: '2FA / TOTP', nav_deception: 'Deception', nav_deception_section: 'DECEPCIÓN', nav_administration: 'ADMINISTRACIÓN',
         nav_inventory: 'Inventario de Equipos', nav_users: 'Usuarios y Roles', nav_webhooks: 'Webhooks',
         nav_export: 'Exportar Datos', nav_settings: 'Configuración', nav_system: 'SISTEMA',
         sys_devices: 'Dispositivos', btn_signout: 'Cerrar Sesión',
@@ -3203,7 +3301,7 @@
         view_comp: '✅ Validación de Cumplimiento', view_wh: '🔗 Webhooks / Notificaciones', view_admin: '⚙️ Administración',
         view_act: '📝 Actividad de Seguridad', view_cmp: '⇄ Comparar Configuraciones', view_audit_tbl: '📋 Auditoría del Sistema',
         view_topo: '🗺️ Topología de Red', view_health: '💚 Estado de Salud', view_maint: '🛠️ Ventanas de Mantenimiento',
-        view_keys: '🔑 API Keys',
+        view_keys: '🔑 API Keys', view_deception: '🎭 Deception / Honeypot',
 
         lbl_id: 'ID (Nombre Interno)', lbl_host: 'IP / Hostname', lbl_vendor: 'Fabricante / OS', lbl_protocol: 'Protocolo',
 
@@ -5333,9 +5431,306 @@
       if (v === 'commands') populateCmdDevices();
       if (v === 'theme') updateThemeUI();
       if (v === 'topology') loadTopology();
+      if (v === 'deception') loadDeception();
+      else if (_dcnTimer) { clearInterval(_dcnTimer); _dcnTimer = null;
+        const ab = document.getElementById('dcn-auto');
+        if (ab) { ab.textContent = '⏱ Auto: OFF'; ab.classList.remove('btn-p'); ab.classList.add('btn-o'); } }
       if (v === 'maintenance') loadMaint();
       if (v === 'apikeys') loadKeys();
       if (v === 'compliance') loadCompliance();
+    }
+
+    // ── DECEPTION ─────────────────────────────────────────────
+    let _dcnEvents = [];
+    let _dcnTimer = null;
+    let _dcnTypesLoaded = false;
+    const DCN_ROLE_ICON = { pc: '🖥️', server: '🗄️', camera: '📹', switch: '🔀', firewall: '🛡️', router: '🌐' };
+
+    function dcnSevColor(s) { return s === 'critical' ? 'var(--red)' : (s === 'high' ? '#f59e0b' : 'var(--accent)'); }
+
+    function dcnTypeColor(t) {
+      return ({ login_success: 'var(--green-bg)', login_attempt: 'rgba(245,158,11,.18)',
+                command: 'rgba(56,189,248,.18)', file_download: 'rgba(239,68,68,.2)',
+                port_scan: 'rgba(239,68,68,.2)', connect: '#202124' })[t] || '#202124';
+    }
+
+    function dcnFmtDetail(e) {
+      const d = e.detail || {};
+      const parts = [];
+      if (d.command) parts.push('cmd: ' + d.command);
+      if (d.password !== undefined) parts.push('pass: ' + d.password);
+      if (d.path) parts.push((d.method || '') + ' ' + d.path);
+      if (d.url) parts.push(d.url);
+      if (d.request) parts.push(String(d.request).split('\n')[0]);
+      if (d.msg) parts.push(d.msg);
+      if (d.dst_port) parts.push('dst:' + d.dst_port);
+      if (d.bytes) parts.push(d.bytes + 'B');
+      if (e.username) parts.unshift('user: ' + e.username);
+      return parts.join('  ');
+    }
+
+    async function loadDeception() {
+      try {
+        const [st, stats, sessions, events, alerts, timeline, network, blocklist] = await Promise.all([
+          fetch(`${A}/deception/engine/status`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/deception/stats`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/deception/sessions?limit=25`, { headers: h() }).then(r => r.json()).catch(() => []),
+          fetch(`${A}/deception/events?limit=100`, { headers: h() }).then(r => r.json()).catch(() => []),
+          fetch(`${A}/deception/alerts?limit=15`, { headers: h() }).then(r => r.json()).catch(() => []),
+          fetch(`${A}/deception/timeline?minutes=30`, { headers: h() }).then(r => r.json()).catch(() => []),
+          fetch(`${A}/deception/network`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/deception/blocklist`, { headers: h() }).then(r => r.json()).catch(() => []),
+        ]);
+
+        const badge = document.getElementById('dcn-engine');
+        if (badge) {
+          badge.textContent = st.running ? `🟢 ${st.count} listeners` : (st.enabled ? '⚪ detenido' : '⛔ deshabilitado');
+          badge.style.background = st.running ? 'var(--green-bg)' : '#202124';
+        }
+        const sb = document.getElementById('sb-dcn');
+        if (sb) sb.textContent = stats.events_total || 0;
+
+        document.getElementById('dcn-stats').innerHTML = [
+          ['Eventos', stats.events_total || 0, '🎯'],
+          ['Atacantes únicos', stats.attackers_unique || 0, '🕵️'],
+          ['Dispositivos señuelo', stats.devices || 0, '🖧'],
+          ['Sesiones', (sessions || []).length, '🔗'],
+        ].map(([label, value, icon]) => `<div class="sc" style="display:flex;align-items:center;gap:12px;padding:14px 18px;flex:1;min-width:150px">
+            <div style="font-size:20px">${icon}</div>
+            <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${label}</div>
+            <div style="font-size:22px;font-weight:700">${value}</div></div></div>`).join('');
+
+        // Timeline
+        const tl = timeline || [];
+        const maxT = Math.max(1, ...tl.map(t => t.count));
+        document.getElementById('dcn-timeline').innerHTML = tl.length
+          ? tl.map(t => `<div title="${esc(t.bucket.slice(11, 16))} — ${t.count} eventos"
+              style="flex:1;min-width:3px;height:${Math.max(3, Math.round(t.count / maxT * 64))}px;background:var(--accent);border-radius:2px 2px 0 0;opacity:.85"></div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin actividad</div>';
+
+        // Surface (VLANs + señuelos)
+        const counts = {};
+        (stats.top_devices || []).forEach(d => { counts[d.device_id] = d.count; });
+        const segSel = document.getElementById('dcn-a-seg');
+        if (segSel && segSel.options.length === 0) {
+          segSel.innerHTML = (network.segments || []).map(s => `<option value="${esc(s.id)}">${esc(s.id)}</option>`).join('');
+        }
+        document.getElementById('dcn-surface').innerHTML = (network.segments || []).map(seg => {
+          const devs = (network.devices || []).filter(d => d.segment === seg.id);
+          return `<div style="margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="badge" style="background:var(--accent-bg);color:var(--accent)">VLAN ${seg.vlan_id || '—'}</span>
+              <span style="font-size:11px;color:var(--text-ter)">${esc(seg.id)} · ${esc(seg.cidr)}${seg.isolated ? ' · aislada' : ''}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
+            ${devs.map(d => {
+              const hits = counts[d.id] || 0;
+              const border = hits > 10 ? 'var(--red)' : (hits > 0 ? '#f59e0b' : 'var(--border)');
+              return `<div style="border-left:3px solid ${border};background:var(--elevated);border-radius:6px;padding:8px 10px;position:relative">
+                <button onclick="dcnDelDevice('${esc(d.id)}')" title="Eliminar"
+                  style="position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-ter);cursor:pointer;font-size:12px">✕</button>
+                <div style="font-size:13px">${DCN_ROLE_ICON[d.role] || '❔'} <b>${esc(d.id)}</b></div>
+                <div style="font-size:10px;color:var(--text-ter);font-family:var(--mono)">${esc(d.ip || '')}</div>
+                <div style="margin-top:4px;font-size:10px;color:var(--text-secondary)">${(d.services || []).map(s => esc(s.proto)).join(' · ')}</div>
+                <div style="margin-top:4px;font-size:11px;color:${hits > 0 ? '#f59e0b' : 'var(--text-ter)'}">${hits} evento(s)</div>
+              </div>`; }).join('')}
+            </div></div>`;
+        }).join('') || '<div style="color:var(--text-ter);font-size:12px">Sin segmentos</div>';
+
+        // Blocklist
+        document.getElementById('dcn-blocklist').innerHTML = (blocklist || []).length
+          ? blocklist.map(b => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+              <span style="font-family:var(--mono);font-size:12px;color:var(--red)">🚫 ${esc(b.ip)}</span>
+              <span style="font-size:10px;color:var(--text-ter);flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.reason || '')}</span>
+              <button class="btn btn-o btn-xs" style="padding:2px 6px;font-size:9px" onclick="dcnUnblock('${esc(b.ip)}')">quitar</button>
+            </div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin IPs bloqueadas</div>';
+
+        // Alertas
+        document.getElementById('dcn-alerts').innerHTML = (alerts || []).length
+          ? alerts.map(a => {
+              let d = {};
+              try { d = JSON.parse(a.details || '{}'); } catch (e) { d = {}; }
+              return `<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+                <span class="badge" style="background:${dcnSevColor(d.severity)};color:#111">${esc((d.severity || '').toUpperCase())}</span>
+                <span style="font-size:12px;flex:1">${esc(d.message || a.details || '')}</span>
+                <span style="font-size:11px;color:var(--text-ter)">${esc((a.timestamp || '').slice(11, 19))}</span>
+              </div>`;
+            }).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin alertas</div>';
+
+        const list = (arr, key) => (arr || []).length
+          ? arr.map(d => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+              <span style="font-family:var(--mono);font-size:12px">${esc(d[key])}</span>
+              <span class="badge" style="background:var(--accent-bg);color:var(--accent)">${d.count}</span></div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin datos</div>';
+        document.getElementById('dcn-attackers').innerHTML = (stats.top_attackers || []).length
+          ? stats.top_attackers.map(a => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+              <span style="font-family:var(--mono);font-size:12px">${esc(a.src_ip)}</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span class="badge" style="background:var(--accent-bg);color:var(--accent)">${a.count}</span>
+                <button class="btn btn-o btn-xs" style="padding:2px 6px;font-size:9px" title="Bloquear IP" onclick="dcnBlock('${esc(a.src_ip)}')">🚫</button>
+              </span></div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin datos</div>';
+        document.getElementById('dcn-devices').innerHTML = list(stats.top_devices, 'device_id');
+
+        // Sesiones
+        document.getElementById('dcn-sessions').innerHTML = (sessions || []).length
+          ? `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text-ter)">
+              <th style="padding:6px">Dispositivo</th><th>Atacante</th><th>Proto</th><th>Eventos</th><th>Comandos</th><th>Última vez</th></tr></thead><tbody>
+              ${sessions.map(s => `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:6px;font-family:var(--mono)">${DCN_ROLE_ICON[(network.devices || []).find(d => d.id === s.device_id)?.role] || ''} ${esc(s.device_id)}</td>
+                <td style="font-family:var(--mono)">${esc(s.src_ip)}</td><td>${esc(s.proto)}</td>
+                <td>${s.event_count}</td>
+                <td>${s.command_count ? `<span class="badge" style="background:rgba(56,189,248,.18)">${s.command_count}</span>` : '0'}</td>
+                <td style="color:var(--text-ter)">${esc((s.last_seen || '').slice(0, 19).replace('T', ' '))}</td>
+              </tr>`).join('')}</tbody></table>`
+          : '<div class="empty" style="padding:20px">Sin sesiones registradas</div>';
+
+        // Eventos (guardamos y renderizamos con filtros)
+        _dcnEvents = events || [];
+        if (!_dcnTypesLoaded) {
+          const types = [...new Set(_dcnEvents.map(e => e.type))].sort();
+          const sel = document.getElementById('dcn-f-type');
+          if (sel) sel.innerHTML = '<option value="">todos los tipos</option>' + types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+          _dcnTypesLoaded = true;
+        }
+        renderDcnEvents();
+      } catch (e) {
+        const el = document.getElementById('dcn-events');
+        if (el) el.innerHTML = '<div class="empty">Error cargando deception: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function renderDcnEvents() {
+      const ipF = (document.getElementById('dcn-f-ip')?.value || '').toLowerCase();
+      const typeF = document.getElementById('dcn-f-type')?.value || '';
+      const rows = _dcnEvents.filter(e =>
+        (!ipF || String(e.src_ip).toLowerCase().includes(ipF)) && (!typeF || e.type === typeF));
+      document.getElementById('dcn-events').innerHTML = rows.length
+        ? `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text-ter)">
+            <th style="padding:6px">Hora</th><th>Dispositivo</th><th>Atacante</th><th>Tipo</th><th>Origen</th><th>Detalle</th></tr></thead><tbody>
+            ${rows.map(e => {
+              const src = (e.detail && (e.detail.sensor || e.detail.service)) || e.proto;
+              return `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:6px;color:var(--text-ter)">${esc((e.timestamp || '').slice(11, 19))}</td>
+                <td style="font-family:var(--mono)">${esc(e.device_id)}</td>
+                <td style="font-family:var(--mono)">${esc(e.src_ip)}</td>
+                <td><span class="badge" style="background:${dcnTypeColor(e.type)}">${esc(e.type)}</span></td>
+                <td style="color:var(--text-ter);font-size:11px">${esc(src)}</td>
+                <td style="color:var(--text-secondary);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(dcnFmtDetail(e))}</td>
+              </tr>`; }).join('')}</tbody></table>`
+        : '<div class="empty" style="padding:20px">Sin eventos registrados</div>';
+    }
+
+    async function dcnEngine(action) {
+      try {
+        const r = await fetch(`${A}/deception/engine/${action}`, { method: 'POST', headers: h() });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { alert('Error: ' + (d.detail || r.status)); return; }
+        loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function dcnSimulate() {
+      const btn = event?.target;
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando...'; }
+      try {
+        const r = await fetch(`${A}/deception/simulate`, { method: 'POST', headers: h() });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { alert('Error: ' + (d.detail || r.status)); }
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = '🧪 Simular ataque'; } }
+    }
+
+    async function dcnExport() {
+      try {
+        const r = await fetch(`${A}/deception/events.csv?limit=2000`, { headers: h() });
+        if (!r.ok) { alert('Error exportando: ' + r.status); return; }
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'deception_events.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { alert('Error exportando: ' + e.message); }
+    }
+
+    function dcnAutoToggle() {
+      const b = document.getElementById('dcn-auto');
+      if (_dcnTimer) {
+        clearInterval(_dcnTimer); _dcnTimer = null;
+        b.textContent = '⏱ Auto: OFF'; b.classList.remove('btn-p'); b.classList.add('btn-o');
+      } else {
+        _dcnTimer = setInterval(loadDeception, 5000);
+        b.textContent = '⏱ Auto: ON'; b.classList.remove('btn-o'); b.classList.add('btn-p');
+      }
+    }
+
+    async function dcnBlock(ip) {
+      if (!confirm('¿Bloquear la IP ' + ip + '?')) return;
+      try {
+        const r = await fetch(`${A}/deception/blocklist`, {
+          method: 'POST', headers: h(), body: JSON.stringify({ ip, reason: 'manual' }),
+        });
+        if (!r.ok) { alert('Error: ' + r.status); }
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function dcnUnblock(ip) {
+      try {
+        const r = await fetch(`${A}/deception/blocklist/${encodeURIComponent(ip)}`, { method: 'DELETE', headers: h() });
+        if (!r.ok && r.status !== 404) { alert('Error: ' + r.status); }
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    function dcnToggleAdd() {
+      const f = document.getElementById('dcn-addform');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function dcnAddDevice() {
+      const id = document.getElementById('dcn-a-id').value.trim();
+      const role = document.getElementById('dcn-a-role').value;
+      const segment = document.getElementById('dcn-a-seg').value;
+      const ip = document.getElementById('dcn-a-ip').value.trim();
+      const proto = document.getElementById('dcn-a-proto').value.trim() || 'ssh';
+      const port = parseInt(document.getElementById('dcn-a-port').value || '22', 10);
+      if (!id || !ip || !segment) { alert('id, IP y segmento son obligatorios'); return; }
+      try {
+        const r = await fetch(`${A}/deception/devices`, {
+          method: 'POST', headers: h(),
+          body: JSON.stringify({ id, role, segment, ip, services: [{ port, proto, engine: 'native' }] }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { alert('Error: ' + (d.detail || r.status)); return; }
+        document.getElementById('dcn-addform').style.display = 'none';
+        ['dcn-a-id', 'dcn-a-ip'].forEach(x => { document.getElementById(x).value = ''; });
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function dcnDelDevice(id) {
+      if (!confirm('¿Eliminar el señuelo ' + id + '?')) return;
+      try {
+        const r = await fetch(`${A}/deception/devices/${encodeURIComponent(id)}`, { method: 'DELETE', headers: h() });
+        if (!r.ok && r.status !== 404) { alert('Error: ' + r.status); }
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    async function dcnExportIocs() {
+      try {
+        const r = await fetch(`${A}/deception/iocs.csv`, { headers: h() });
+        if (!r.ok) { alert('Error: ' + r.status); return; }
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'deception_iocs.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } catch (e) { alert('Error: ' + e.message); }
     }
 
     // ── TOPOLOGY ──────────────────────────────────────────────
