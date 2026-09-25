@@ -18,7 +18,9 @@ DECEPTION_DIR = CONFIG_DIR / "deception"
 DECEPTION_NETWORK_FILE = Path(
     os.getenv("NETPULSE_DECEPTION_NETWORK_FILE", str(DECEPTION_DIR / "network.yaml"))
 )
-DECEPTION_DATA_DIR = BASE_DIR / "deception"
+DECEPTION_DATA_DIR = Path(
+    os.getenv("NETPULSE_DECEPTION_DATA_DIR", str(BASE_DIR / "deception"))
+)
 DECEPTION_DATA_DIR.mkdir(exist_ok=True)
 DECEPTION_DB = DECEPTION_DATA_DIR / "deception.db"
 # Interfaz del bridge de deception (nunca la de gestión); usada por el

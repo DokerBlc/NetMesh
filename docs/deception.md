@@ -235,3 +235,44 @@ tabla de sesiones y últimos eventos. Se recarga con `loadDeception()`.
 ```bash
 pytest tests/test_deception.py tests/test_deception_engine.py -q
 ```
+
+## Prueba rápida (quickstart)
+
+```bash
+# 0) entorno (una vez)
+python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+
+# 1) smoke test end-to-end SIN Docker: arranca, ataca y resume
+make smoke
+
+# 2) usuarios de prueba con contraseñas conocidas
+make seed          # ver config/.initial_credentials
+
+# 3) arrancar la API + motor + dashboard (primer plano)
+make run           # http://localhost:8082  (sección DECEPTION)
+
+# 4) honeypots reales + monitoreo (opcional, requiere Docker)
+make docker-up
+```
+
+Atajos disponibles con `make help`: `test`, `lint`, `go-build`,
+`docker-up`, `down`, `clean`.
+
+Para generar actividad y verla entrar en vivo:
+
+```bash
+# ataque a los dispositivos simulados
+.venv/bin/python scripts/deception_attack_demo.py
+
+# o desde el dashboard: botón "🧪 Simular ataque", auto-refresh y filtros
+```
+
+## Solución de problemas
+
+- **No puedo iniciar sesión**: corré `make seed` (crea usuarios de prueba
+  en `config/users.yaml` y muestra las contraseñas).
+- **`make smoke` falla por puerto 8082 ocupado**: `make down` o pasá
+  `PORT=8090 make smoke`.
+- **Docker no está**: Colima vía `brew install colima docker docker-compose`
+  + `colima start`. En macOS/Cowrie ver la nota de permisos de bind mount.
+
