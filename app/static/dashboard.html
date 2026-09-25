@@ -2762,6 +2762,7 @@
         <div class="mon-grid" id="mon-grid"></div>
         <div id="mon-charts" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start">
         </div>
+        <div id="mon-deception" style="margin-top:20px"></div>
       </div>
       <div class="view" id="v-performance" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
@@ -3800,7 +3801,41 @@
       _nativeChart('nm-lat', [{ label: 'Lat', points: _avgByTs(devs, 'latency_ms') }], ['#ea580c'], '');
       _nativeChart('nm-devmem', [{ label: 'RAM', points: _avgByTs(devs, 'memory_percent') }], ['#23a55a'], '%');
     }
+    async function refMonDeception() {
+      const el = document.getElementById('mon-deception');
+      if (!el) return;
+      try {
+        const [ov, stats] = await Promise.all([
+          fetch(`${A}/monitoring/overview`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/deception/stats`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+        ]);
+        const m = ov.metrics || {};
+        const cards = [
+          ['Eventos deception', stats.events_total || 0, 'var(--accent)'],
+          ['Atacantes únicos', stats.attackers_unique || 0, '#ef4444'],
+          ['Alertas', (m.deception_alerts ?? '—'), '#f59e0b'],
+          ['Dispositivos señuelo', stats.devices || 0, '#22c55e'],
+        ];
+        el.innerHTML = `<h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">DECEPTION / HONEYPOT</h3>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+            ${cards.map(c => `<div class="mon-card" style="flex:1;min-width:150px;border-top:3px solid ${c[2]}"><h4>${c[0]}</h4><div class="mon-val">${c[1]}</div></div>`).join('')}
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="dcn-2col">
+            <div class="mon-chart" style="padding:14px;height:auto"><h4>Eventos por tipo</h4><div id="mdc-events"></div></div>
+            <div class="mon-chart" style="padding:14px;height:auto"><h4>Alertas por severidad</h4><div id="mdc-alerts"></div></div>
+          </div>`;
+        renderBars('mdc-events', ov.events_by_type || [], 'var(--accent)');
+        const alerts = ov.alerts_by_severity || [];
+        const max = Math.max(1, ...alerts.map(x => x.value));
+        const sevColor = s => s === 'critical' ? 'var(--red)' : (s === 'high' ? '#f59e0b' : 'var(--accent)');
+        document.getElementById('mdc-alerts').innerHTML = alerts.length
+          ? alerts.map(a => `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--text-secondary);text-transform:capitalize">${esc(a.label)}</span><span style="font-family:var(--mono)">${Math.round(a.value)}</span></div><div style="height:7px;background:var(--surface);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.round(a.value / max * 100)}%;background:${sevColor(a.label)};border-radius:4px"></div></div></div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin alertas</div>';
+      } catch (e) { /* silencioso */ }
+    }
+
     async function refMon() {
+      refMonDeception();
       const g = document.getElementById('mon-grid'); if (!g) return;
 
       // Si Prometheus no responde, usar métricas nativas (host + poller)
