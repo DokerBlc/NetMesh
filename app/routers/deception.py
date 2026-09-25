@@ -351,3 +351,48 @@ def remove_allowlist(cidr: str):
     from app.services.deception import allowlist_svc
     if not allowlist_svc.remove(cidr):
         raise HTTPException(404, "Entrada no encontrada")
+
+
+# ── GeoIP / Mapa / Firewall ──────────────────────────────────
+
+
+@router.get("/geo", dependencies=AUTH)
+def geo_map(limit: int = 3000):
+    """Puntos de ataque geolocalizados + objetivo (para el mapa global)."""
+    from app.services.deception import geo_svc
+    return geo_svc.attack_map(limit=limit)
+
+
+@router.get("/geoip/{ip}", dependencies=AUTH)
+def geoip_lookup(ip: str):
+    """Geolocaliza una IP concreta (offline)."""
+    from app.services.deception import geoip_svc
+    return {"ip": ip, "available": geoip_svc.available(),
+            "geo": geoip_svc.lookup(ip)}
+
+
+@router.get("/firewall/status", dependencies=AUTH)
+def firewall_status():
+    """Estado del firewall y blocklist."""
+    from app.services.deception import firewall_svc
+    return firewall_svc.status()
+
+
+@router.post("/firewall/block", dependencies=ADMIN)
+def firewall_block(payload: dict):
+    """Bloquea una IP en el firewall (dry-run salvo FIREWALL_ENABLED)."""
+    from app.services.deception import firewall_svc
+    ip = (payload or {}).get("ip", "").strip()
+    if not ip:
+        raise HTTPException(422, "Se requiere 'ip'")
+    return firewall_svc.block(ip, reason=(payload or {}).get("reason", "firewall"))
+
+
+@router.post("/firewall/unblock", dependencies=ADMIN)
+def firewall_unblock(payload: dict):
+    """Quita una IP de la blocklist."""
+    from app.services.deception import firewall_svc
+    ip = (payload or {}).get("ip", "").strip()
+    if not ip:
+        raise HTTPException(422, "Se requiere 'ip'")
+    return firewall_svc.unblock(ip)

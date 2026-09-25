@@ -13,3 +13,5 @@ nornir
 reportlab
 psutil
 paramiko
+geoip2
+maxminddb-geolite2

@@ -81,6 +81,20 @@ DECEPTION_ALERT_IGNORE_PRIVATE = os.getenv(
     "NETPULSE_DECEPTION_ALERT_IGNORE_PRIVATE", "false"
 ).lower() == "true"
 
+# ── GeoIP / Mapa global ──────────────────────────────────────
+# Base de datos MaxMind (.mmdb). Si está vacío se autodetecta la que
+# incluye el paquete `maxminddb-geolite2` (offline, sin servicios).
+GEOIP_DB = os.getenv("NETPULSE_GEOIP_DB", "")
+# Ubicación del centro de datos / red señuelo (punto verde del mapa).
+DECEPTION_DATACENTER_LAT = float(os.getenv("NETPULSE_DATACENTER_LAT", "0"))
+DECEPTION_DATACENTER_LON = float(os.getenv("NETPULSE_DATACENTER_LON", "0"))
+DECEPTION_DATACENTER_NAME = os.getenv("NETPULSE_DATACENTER_NAME", "Data Center")
+
+# ── Firewall ─────────────────────────────────────────────────
+# Aplica reglas de bloqueo reales (requiere privilegios). Deshabilitado
+# por defecto: solo devuelve los comandos a ejecutar (dry-run).
+FIREWALL_ENABLED = os.getenv("NETPULSE_FIREWALL_ENABLED", "false").lower() == "true"
+
 API_TITLE = "NetPulse API"
 API_VERSION = "1.0.0"
 API_HOST = os.getenv("NETPULSE_HOST", "0.0.0.0")

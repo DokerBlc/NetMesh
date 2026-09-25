@@ -239,6 +239,23 @@ Herramientas complementarias para producción (integración futura):
 **GeoLite2** (reputación/geo offline), **Suricata/Wazuh** (IDS),
 **fail2ban** (bloqueo por umbral), **MISP** (compartir IOCs).
 
+## GeoIP, mapa global y firewall (Fase G/H)
+
+- **GeoIP offline** (`geoip_svc.py`): país/ciudad/coordenadas con una base
+  MaxMind local. Por defecto usa la incluida en `maxminddb-geolite2`
+  (sin servicios externos); se puede apuntar otra con `NETPULSE_GEOIP_DB`.
+- **Mapa global** en el dashboard: puntos **rojos** = origen de los
+  ataques (geolocalizados, tamaño por nº de eventos) y punto **verde** =
+  centro de datos objetivo (`NETPULSE_DATACENTER_LAT/LON/NAME`). Mapa
+  vectorial propio (`app/static/world.geo.json`, Natural Earth, dominio
+  público), sin tiles externos. Datos: `GET /api/deception/geo`.
+- **Firewall** (`firewall_svc.py`): traduce la IP a una regla del firewall
+  local (pf en macOS, nftables/iptables en Linux, netsh en Windows). Por
+  defecto es **dry-run** (registra en blocklist y devuelve el comando);
+  con `NETPULSE_FIREWALL_ENABLED=true` aplica la regla (requiere permisos).
+  Endpoints: `POST /api/deception/firewall/block`, `/firewall/unblock`,
+  `GET /api/deception/firewall/status`.
+
 ## Blocklist e IOCs (Fase G/H)
 
 - **Blocklist** (`blocklist_svc.py`, `deception/blocklist.json`): IPs
