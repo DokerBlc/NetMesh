@@ -12,6 +12,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.models.deception import DeceptionEventIn, DeceptionEventType
 from app.services.deception import (
+    alert_svc,
+    allowlist_svc,
     blocklist_svc,
     ioc_svc,
     store_svc,
@@ -155,3 +157,74 @@ def test_sync_from_netbox(tmp_path, monkeypatch):
     roles = {d["id"]: d["role"] for d in topology_svc.list_devices()}
     assert roles["fw-01"] == "firewall"
     assert roles["sw-01"] == "switch"
+
+
+# ── Anti falsos positivos ────────────────────────────────────
+
+
+@pytest.fixture()
+def allow_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(allowlist_svc, "ALLOWLIST_FILE", tmp_path / "allowlist.json")
+
+
+def test_allowlist_cidr(allow_file):
+    allowlist_svc.add("10.0.0.0/8", "gestion")
+    assert allowlist_svc.is_allowed("10.1.2.3")
+    assert not allowlist_svc.is_allowed("203.0.113.9")
+    assert allowlist_svc.remove("10.0.0.0/8")
+
+
+def test_alert_ignora_simulado(db_path, allow_file, monkeypatch):
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERTS_ENABLED", True)
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERT_IGNORE_SIMULATED", True)
+    rec = store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="203.0.113.9", proto="ssh",
+        type=DeceptionEventType.LOGIN_SUCCESS, success=True,
+        detail={"simulated": True},
+    ))
+    assert alert_svc.evaluate(rec) == []
+
+
+def test_alert_ignora_loopback(db_path, allow_file, monkeypatch):
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERTS_ENABLED", True)
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERT_IGNORE_LOOPBACK", True)
+    rec = store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="127.0.0.1", proto="ssh",
+        type=DeceptionEventType.LOGIN_SUCCESS, success=True,
+    ))
+    assert alert_svc.evaluate(rec) == []
+
+
+def test_alert_ignora_allowlisted(db_path, allow_file, monkeypatch):
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERTS_ENABLED", True)
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERT_IGNORE_SIMULATED", False)
+    monkeypatch.setattr(alert_svc, "DECEPTION_ALERT_IGNORE_LOOPBACK", False)
+    allowlist_svc.add("203.0.113.0/24", "scanner propio")
+    rec = store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="203.0.113.9", proto="ssh",
+        type=DeceptionEventType.LOGIN_SUCCESS, success=True,
+    ))
+    assert alert_svc.evaluate(rec) == []
+
+
+def test_ioc_clasifica_loopback_como_lab(db_path, block_file, allow_file):
+    store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="127.0.0.1", proto="ssh",
+        type=DeceptionEventType.LOGIN_SUCCESS, success=True,
+    ))
+    store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="198.51.100.7", proto="ssh",
+        type=DeceptionEventType.COMMAND, detail={"command": "cat /etc/passwd"},
+    ))
+    store_svc.log_event(DeceptionEventIn(
+        device_id="srv-01", src_ip="45.155.205.233", proto="ssh",
+        type=DeceptionEventType.LOGIN_SUCCESS, success=True, detail={"simulated": True},
+    ))
+    iocs = {r["ip"]: r for r in ioc_svc.summarize()}
+    assert iocs["127.0.0.1"]["threat"] == "info"
+    assert iocs["127.0.0.1"]["kind"] == "lab"
+    # El simulado no aparece
+    assert "45.155.205.233" not in iocs
+    # El público con comando sensible (sin login) queda en medium
+    assert iocs["198.51.100.7"]["threat"] == "medium"
+    assert iocs["198.51.100.7"]["score"] >= 10

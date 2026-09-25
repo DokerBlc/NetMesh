@@ -10,6 +10,7 @@ El envío de notificaciones es bloqueante, por lo que ``submit`` lo
 despacha en un executor para no frenar a los listeners.
 """
 
+import ipaddress
 import json
 import logging
 import threading
@@ -21,12 +22,15 @@ from typing import Optional
 from app.core.settings import (
     DECEPTION_ALERTS_ENABLED,
     DECEPTION_ALERT_COOLDOWN,
+    DECEPTION_ALERT_IGNORE_LOOPBACK,
+    DECEPTION_ALERT_IGNORE_PRIVATE,
+    DECEPTION_ALERT_IGNORE_SIMULATED,
     DECEPTION_AUTOBLOCK_CRITICAL,
     DECEPTION_BRUTE_FORCE_THRESHOLD,
     DECEPTION_BRUTE_FORCE_WINDOW,
 )
 from app.services import audit_svc, metrics_svc, notifications_svc
-from app.services.deception import blocklist_svc, store_svc
+from app.services.deception import allowlist_svc, blocklist_svc, store_svc
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +65,9 @@ def evaluate(record: dict) -> list[dict]:
     if not DECEPTION_ALERTS_ENABLED:
         return []
 
+    if _is_noise(record):
+        return []
+
     etype = record.get("type")
     alerts: list[dict] = []
 
@@ -85,6 +92,28 @@ def recent(limit: int = 50) -> list[dict]:
 
 
 # ── Internos ─────────────────────────────────────────────────
+
+
+def _is_noise(record: dict) -> bool:
+    """Filtra eventos que no deben generar alertas (anti falsos positivos)."""
+    detail = record.get("detail") or {}
+    if DECEPTION_ALERT_IGNORE_SIMULATED and detail.get("simulated"):
+        return True
+
+    src_ip = record.get("src_ip") or ""
+    if src_ip and allowlist_svc.is_allowed(src_ip):
+        return True
+
+    try:
+        addr = ipaddress.ip_address(src_ip)
+    except ValueError:
+        return False
+
+    if DECEPTION_ALERT_IGNORE_LOOPBACK and addr.is_loopback:
+        return True
+    if DECEPTION_ALERT_IGNORE_PRIVATE and addr.is_private and not addr.is_loopback:
+        return True
+    return False
 
 
 def _make_alert(record: dict, rule: str, severity: str, title: str) -> dict:

@@ -395,6 +395,48 @@
       font-weight: 500
     }
 
+    /* ── Iconos SVG ── */
+    .ic { width: 16px; height: 16px; flex: 0 0 auto; vertical-align: middle; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round }
+    .ic-sm { width: 13px; height: 13px }
+    .ic-lg { width: 20px; height: 20px }
+    .icbtn { display: inline-flex; align-items: center; gap: 6px }
+
+    /* ── Indicadores NOC + menú de usuario ── */
+    .noc-ind { display: flex; align-items: center; gap: 14px; margin-right: 16px; border-right: 1px solid var(--border); padding-right: 16px }
+    .noc-ind span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sec) }
+    .noc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block }
+    .noc-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green) }
+    .noc-dot.red { background: var(--red) }
+    .usermenu { position: relative }
+    .usermenu-btn { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 5px 10px; cursor: pointer; color: var(--text) }
+    .usermenu-btn:hover { border-color: var(--border-h) }
+    .avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7c3aed); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700 }
+    .usermeta { display: flex; flex-direction: column; line-height: 1.15; text-align: left }
+    .usermeta .uname { font-size: 12px; font-weight: 600; color: var(--text) }
+    .usermeta .urole { font-size: 10px; color: var(--text-ter); text-transform: uppercase; letter-spacing: .4px }
+    .usermenu-dd { position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; background: var(--elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 12px 32px rgba(0, 0, 0, .4); padding: 6px; display: none; z-index: 1000 }
+    .usermenu-dd.open { display: block }
+    .udd-head { padding: 9px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px }
+    .udd-head .n { font-size: 13px; font-weight: 600; color: var(--text) }
+    .udd-item { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: none; color: var(--text-secondary); padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: left }
+    .udd-item:hover { background: var(--surface); color: var(--text) }
+    @media(max-width: 700px) { .usermeta { display: none } .noc-ind { display: none } }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px }
+    .modal-overlay.open { display: flex }
+    .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; max-width: 660px; width: 100%; max-height: 86vh; overflow: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, .5) }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--panel); z-index: 1 }
+    .modal-title { font-size: 15px; font-weight: 700; color: var(--text) }
+    .modal-sub { font-size: 11px; color: var(--text-ter); font-family: var(--mono) }
+    .modal-x { background: none; border: none; color: var(--text-ter); cursor: pointer; padding: 4px }
+    .modal-x:hover { color: var(--text) }
+    .modal-body { padding: 18px }
+    .kv { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px }
+    .kv .k { color: var(--text-ter) }
+    .kv .v { color: var(--text); font-family: var(--mono); text-align: right }
+    .sect { font-size: 11px; color: var(--text-ter); text-transform: uppercase; letter-spacing: .5px; margin: 16px 0 6px }
+
     /* ── LAYOUT ── */
     .main {
       transition: margin-left .3s cubic-bezier(.22, .61, .36, 1);
@@ -2156,6 +2198,11 @@
           <line x1="16" y1="13" x2="8" y2="13" />
           <line x1="16" y1="17" x2="8" y2="17" />
         </svg> <span data-i18n="nav_logs">Logs</span></div>
+      <div class="sidebar-item" onclick="swView('monitoring')"><svg class="si" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18" />
+          <polyline points="7 14 11 9 15 13 19 6" />
+        </svg> <span data-i18n="nav_monitoring">Monitoring</span></div>
     </div>
 
     <div class="sidebar-s" id="sb-operations">
@@ -2275,27 +2322,36 @@
       </div>
 
       <div class="auth">
-        <!-- NOC Indicators -->
-        <div
-          style="display:flex;align-items:center;gap:12px;margin-right:16px;border-right:1px solid var(--border);padding-right:16px">
-          <span style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:4px"><span
-              style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 8px var(--green)"></span><span
-              id="info-dev-header">SYS OK</span></span>
-          <span style="font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:4px"><span
-              id="hdr-alert-dot" style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>
-            <span id="hdr-alerts">0 ALERTS</span></span>
+        <div class="noc-ind">
+          <span><span class="noc-dot green"></span><span id="info-dev-header">SYS OK</span></span>
+          <span><span class="noc-dot red" id="hdr-alert-dot"></span><span id="hdr-alerts">0 ALERTS</span></span>
         </div>
-        <!-- Language Selector -->
         <select id="lang-select" onchange="setLang(this.value)"
-          style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:11px;cursor:pointer;margin-right:8px">
-          <option value="en">🇺🇸 EN</option>
-          <option value="es">🇲🇽 ES</option>
+          style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:11px;cursor:pointer;margin-right:10px">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
         </select>
-        <span id="user-info"
-          style="display:none;background:var(--surface);padding:4px 10px;border-radius:12px;border:1px solid var(--border)"></span>
-        <button onclick="logout()"
-          style="background:transparent;border:1px solid var(--border-h);color:var(--text-ter);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;transition:var(--surface) .2s"
-          data-i18n="btn_signout">Sign Out</button>
+        <span id="user-info" style="display:none"></span>
+        <div class="usermenu">
+          <button class="usermenu-btn" onclick="toggleUserMenu(event)">
+            <span class="avatar" id="user-avatar">?</span>
+            <span class="usermeta">
+              <span class="uname" id="user-name">&#8212;</span>
+              <span class="urole" id="user-role">&#8212;</span>
+            </span>
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+          <div class="usermenu-dd" id="user-dd">
+            <div class="udd-head">
+              <div class="n" id="dd-name">&#8212;</div>
+              <div style="font-size:11px;color:var(--text-ter)" id="dd-role"></div>
+            </div>
+            <button class="udd-item" onclick="logout()">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+              <span data-i18n="btn_signout">Sign Out</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2988,17 +3044,17 @@
       <div class="view" id="v-deception" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:10px">
-            <h2 style="font-size:16px;font-weight:600" data-i18n="view_deception">🎭 Deception / Honeypot</h2>
+            <h2 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><circle cx="12" cy="11" r="2.5"/><line x1="12" y1="13.5" x2="12" y2="17"/></svg><span data-i18n="view_deception">Deception / Honeypot</span></h2>
             <span id="dcn-engine" class="badge" style="background:#202124">—</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-p btn-sm" onclick="dcnSimulate()" title="Genera actividad de atacante de prueba">🧪 Simular ataque</button>
-            <button class="btn btn-o btn-sm" onclick="dcnExport()">⬇ CSV</button>
-            <button class="btn btn-o btn-sm" id="dcn-auto" onclick="dcnAutoToggle()" title="Auto-actualizar cada 5s">⏱ Auto: OFF</button>
+            <button class="btn btn-p btn-sm icbtn" onclick="dcnSimulate(event)" title="Genera actividad de atacante de prueba"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg> Simular ataque</button>
+            <button class="btn btn-o btn-sm icbtn" onclick="dcnExport()"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M3 21h18"/></svg> CSV</button>
+            <button class="btn btn-o btn-sm icbtn" id="dcn-auto" onclick="dcnAutoToggle()" title="Auto-actualizar cada 5s"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="9" y1="2" x2="15" y2="2"/></svg> <span>Auto: OFF</span></button>
             <span style="width:1px;height:20px;background:var(--border)"></span>
-            <button class="btn btn-o btn-sm" onclick="dcnEngine('start')">▶</button>
-            <button class="btn btn-o btn-sm" onclick="dcnEngine('stop')">⏹</button>
-            <button class="btn btn-o btn-sm" onclick="loadDeception()" data-i18n="btn_refresh">🔄</button>
+            <button class="btn btn-o btn-sm" onclick="dcnEngine('start')" title="Levantar motor"><svg class="ic ic-sm" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20"/></svg></button>
+            <button class="btn btn-o btn-sm" onclick="dcnEngine('stop')" title="Detener motor"><svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
+            <button class="btn btn-o btn-sm" onclick="loadDeception()" title="Actualizar"><svg class="ic ic-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2-9.5L23 10"/></svg></button>
           </div>
         </div>
 
@@ -3016,7 +3072,7 @@
           <div class="sc" style="padding:16px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
               <h3 style="font-size:11px;color:var(--text-ter)">SUPERFICIE DE ATAQUE (VLANs y señuelos)</h3>
-              <button class="btn btn-o btn-sm" onclick="dcnToggleAdd()" title="Agregar dispositivo señuelo">➕</button>
+              <button class="btn btn-o btn-sm" onclick="dcnToggleAdd()" title="Agregar dispositivo señuelo"><svg class="ic ic-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
             </div>
             <div id="dcn-addform" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -3046,7 +3102,7 @@
           <div class="sc" style="padding:16px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <h3 style="font-size:11px;color:var(--text-ter)">BLOCKLIST</h3>
-              <button class="btn btn-o btn-sm" onclick="dcnExportIocs()" title="Exportar IOCs CSV">⬇ IOCs</button>
+              <button class="btn btn-o btn-sm icbtn" onclick="dcnExportIocs()" title="Exportar IOCs CSV"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M3 21h18"/></svg> IOCs</button>
             </div>
             <div id="dcn-blocklist"></div>
           </div>
@@ -3067,6 +3123,42 @@
           </div>
         </div>
         <div id="dcn-events"></div>
+      </div>
+
+      <div class="view" id="v-monitoring" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <h2 style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><svg class="ic ic-lg" viewBox="0 0 24 24"><polyline points="3 12 7 12 10 4 14 20 17 12 21 12" /></svg><span data-i18n="view_monitoring">Monitoring</span></h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <a id="mon-grafana-link" class="btn btn-o btn-sm icbtn" target="_blank" rel="noopener"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M14 3h7v7"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg> Grafana</a>
+            <button class="btn btn-o btn-sm icbtn" id="mon-auto" onclick="monAutoToggle()"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="9" y1="2" x2="15" y2="2"/></svg> <span>Auto: OFF</span></button>
+            <button class="btn btn-o btn-sm" onclick="loadMonitoring()" title="Actualizar"><svg class="ic ic-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2-9.5L23 10"/></svg></button>
+          </div>
+        </div>
+
+        <div id="mon-services" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+        <div id="mon-cards" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px"></div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px" class="dcn-2col">
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">HOST — CPU %</h3><div id="mon-chart-cpu" style="display:flex;align-items:flex-end;gap:2px;height:60px"></div></div>
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">HOST — MEMORIA %</h3><div id="mon-chart-mem" style="display:flex;align-items:flex-end;gap:2px;height:60px"></div></div>
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">HOST — DISCO %</h3><div id="mon-chart-disk" style="display:flex;align-items:flex-end;gap:2px;height:60px"></div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" class="dcn-2col">
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:10px">EVENTOS DE DECEPTION POR TIPO</h3><div id="mon-events"></div></div>
+          <div class="sc" style="padding:16px"><h3 style="font-size:11px;color:var(--text-ter);margin-bottom:10px">ALERTAS POR SEVERIDAD</h3><div id="mon-alerts"></div></div>
+        </div>
+
+        <div class="sc" style="padding:16px;margin-bottom:16px">
+          <h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">TARGETS DE PROMETHEUS</h3>
+          <div id="mon-targets"></div>
+        </div>
+
+        <div class="sc" style="padding:16px">
+          <h3 style="font-size:11px;color:var(--text-ter);margin-bottom:8px">DASHBOARD GRAFANA (incrustado)</h3>
+          <iframe id="mon-grafana" style="width:100%;height:520px;border:1px solid var(--border);border-radius:8px;background:#111"
+            loading="lazy"></iframe>
+        </div>
       </div>
 
       <div class="view" id="v-maintenance" style="overflow-y:auto;max-height:calc(100vh - 60px);padding:24px">
@@ -3237,7 +3329,7 @@
       en: {
         nav_overview: 'OVERVIEW', nav_dashboard: 'Dashboard', nav_infrastructure: 'INFRASTRUCTURE',
         nav_devices: 'Devices', nav_connectivity: 'Connectivity', nav_observability: 'OBSERVABILITY',
-        nav_metrics: 'Metrics', nav_performance: 'Performance', nav_alerts: 'Alerts', nav_logs: 'Logs',
+        nav_metrics: 'Metrics', nav_performance: 'Performance', nav_alerts: 'Alerts', nav_logs: 'Logs', nav_monitoring: 'Monitoring',
         nav_operations: 'OPERATIONS', nav_commands: 'Commands', nav_backups: 'Backups',
         nav_schedules: 'Schedules', nav_compare: 'Compare', nav_topology: 'Topology',
         nav_health: 'Health Scores', nav_maintenance: 'Maintenance', nav_security: 'SECURITY',
@@ -3257,7 +3349,7 @@
         btn_register: '✅ Register Device to Database', card_latency: 'Latency', btn_refresh: '🔄 Refresh', btn_test: '🔄 Test Connectivity', btn_close: '✕ Close',
 
         view_conn: '📡 Connectivity', view_theme: '🎨 Theme & Appearance', view_mon: '📊 Monitoring',
-        view_perf: '⚡ Performance — Real-Time', view_alerts: '🚨 Active Alerts', view_logs: '📝 Audit & System Logs',
+        view_perf: '⚡ Performance — Real-Time', view_alerts: '🚨 Active Alerts', view_logs: '📝 Audit & System Logs', view_monitoring: '📊 Monitoring (unified)',
         view_bk: '💾 Backup Management', view_exp: '📤 Export Inventory', view_sched: '⏰ Scheduled Backups',
         view_comp: '✅ Compliance Validation', view_wh: '🔗 Webhooks / Notifications', view_admin: '⚙️ Administration',
         view_act: '📝 Security Activity', view_cmp: '⇄ Compare Configurations', view_audit_tbl: '📋 Audit Trail',
@@ -3276,7 +3368,7 @@
       es: {
         nav_overview: 'GENERAL', nav_dashboard: 'Panel Principal', nav_infrastructure: 'INFRAESTRUCTURA',
         nav_devices: 'Dispositivos', nav_connectivity: 'Conectividad', nav_observability: 'OBSERVABILIDAD',
-        nav_metrics: 'Métricas', nav_performance: 'Rendimiento', nav_alerts: 'Alertas', nav_logs: 'Registros',
+        nav_metrics: 'Métricas', nav_performance: 'Rendimiento', nav_alerts: 'Alertas', nav_logs: 'Registros', nav_monitoring: 'Monitoreo',
         nav_operations: 'OPERACIONES', nav_commands: 'Comandos', nav_backups: 'Respaldos',
         nav_schedules: 'Programación', nav_compare: 'Comparar', nav_topology: 'Topología',
         nav_health: 'Estado de Salud', nav_maintenance: 'Mantenimiento', nav_security: 'SEGURIDAD',
@@ -3296,7 +3388,7 @@
         btn_register: '✅ Registrar Dispositivo en DB', card_latency: 'Latencia', btn_refresh: '🔄 Actualizar', btn_test: '🔄 Probar', btn_close: '✕ Cerrar',
 
         view_conn: '📡 Conectividad', view_theme: '🎨 Apariencia', view_mon: '📊 Monitoreo',
-        view_perf: '⚡ Performance — Tiempo Real', view_alerts: '🚨 Alertas Activas', view_logs: '📝 Logs de Sistema y Auditoría',
+        view_perf: '⚡ Performance — Tiempo Real', view_alerts: '🚨 Alertas Activas', view_logs: '📝 Logs de Sistema y Auditoría', view_monitoring: '📊 Monitoreo (unificado)',
         view_bk: '💾 Gestión de Backups', view_exp: '📤 Exportar Inventario', view_sched: '⏰ Backups Programados',
         view_comp: '✅ Validación de Cumplimiento', view_wh: '🔗 Webhooks / Notificaciones', view_admin: '⚙️ Administración',
         view_act: '📝 Actividad de Seguridad', view_cmp: '⇄ Comparar Configuraciones', view_audit_tbl: '📋 Auditoría del Sistema',
@@ -3334,6 +3426,40 @@
     function toast(m, ty = 'info', d = 3000) { const e = document.createElement('div'); e.className = `toast ${ty}`; e.textContent = m; document.body.appendChild(e); setTimeout(() => e.remove(), d) }
     function h() { return t ? { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' } }
     function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+    // ── Iconos SVG (sin emojis) ──────────────────────────────
+    const IC = {
+      target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
+      eye: '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>',
+      server: '<rect x="3" y="4" width="18" height="7" rx="1"/><rect x="3" y="13" width="18" height="7" rx="1"/><line x1="7" y1="7.5" x2="7" y2="7.5"/><line x1="7" y1="16.5" x2="7" y2="16.5"/>',
+      link: '<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>',
+      monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+      camera: '<path d="M3 7h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3z"/><path d="M16 9l5-2v10l-5-2"/><circle cx="7" cy="12" r="2"/>',
+      switchic: '<circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/>',
+      shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+      router: '<rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="17.5" x2="6" y2="17.5"/><line x1="6" y1="4" x2="6" y2="10"/><line x1="18" y1="4" x2="18" y2="10"/><line x1="6" y1="10" x2="18" y2="10"/>',
+      alert: '<path d="M12 3l9 16H3z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17"/>',
+      flask: '<path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+      download: '<path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M3 21h18"/>',
+      refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2-9.5L23 10"/>',
+      play: '<polygon points="6 4 20 12 6 20"/>',
+      stop: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
+      timer: '<circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="9" y1="2" x2="15" y2="2"/>',
+      external: '<path d="M14 3h7v7"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>',
+      cpu: '<rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="5"/><line x1="15" y1="1" x2="15" y2="5"/><line x1="9" y1="19" x2="9" y2="23"/><line x1="15" y1="19" x2="15" y2="23"/><line x1="1" y1="9" x2="5" y2="9"/><line x1="1" y1="15" x2="5" y2="15"/><line x1="19" y1="9" x2="23" y2="9"/><line x1="19" y1="15" x2="23" y2="15"/>',
+      memory: '<rect x="4" y="7" width="16" height="10" rx="2"/><line x1="8" y1="7" x2="8" y2="3"/><line x1="12" y1="7" x2="12" y2="3"/><line x1="16" y1="7" x2="16" y2="3"/>',
+      disk: '<line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+      lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+      ban: '<circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/>',
+      check: '<polyline points="20 6 9 17 4 12"/>',
+      close: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      globe: '<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/>',
+      activity: '<polyline points="3 12 7 12 10 4 14 20 17 12 21 12"/>',
+    };
+    function icon(name, cls) { return `<svg class="ic ${cls || ''}" viewBox="0 0 24 24">${IC[name] || ''}</svg>`; }
+    const ROLE_ICON = { pc: 'monitor', server: 'server', camera: 'camera', switch: 'switchic', firewall: 'shield', router: 'router' };
+
 
     // ── THEME ──
     const PALETTES = {
@@ -3421,22 +3547,36 @@
       const u = document.getElementById('user').value, p = document.getElementById('pass').value;
       try {
         const r = await fetch(`${A}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
-        if (!r.ok) { document.getElementById('login-error').textContent = '❌ Usuario o contraseña incorrectos'; document.getElementById('login-error').style.display = 'block'; return }
+        if (!r.ok) { document.getElementById('login-error').textContent = 'Usuario o contraseña incorrectos'; document.getElementById('login-error').style.display = 'block'; return }
         const d = await r.json(); t = d.access_token;
         const mr = await fetch(`${A}/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
         const me = await mr.json(); currentUser = me; const role = me.role || 'viewer';
         document.getElementById('login-screen').style.display = 'none'; document.getElementById('main').style.display = 'block';
-        document.getElementById('user-info').textContent = `✅ ${me.username || u} · ${role}`; document.getElementById('user-info').style.display = 'inline';
+        const uname = me.username || u || 'user';
+        document.getElementById('user-avatar').textContent = uname.slice(0, 2).toUpperCase();
+        document.getElementById('user-name').textContent = uname;
+        document.getElementById('user-role').textContent = role;
+        document.getElementById('dd-name').textContent = uname;
+        document.getElementById('dd-role').textContent = 'Rol: ' + role;
         document.getElementById('info-api').textContent = 'Conectada';
         // Todos los grupos visibles para cualquier usuario autenticado.
         // El RBAC del backend sigue validando cada acción.
         document.querySelectorAll('.sidebar-s').forEach(el => { el.style.display = 'block'; });
         init()
-      } catch (e) { document.getElementById('login-error').textContent = '❌ Error de conexión'; document.getElementById('login-error').style.display = 'block' }
+      } catch (e) { document.getElementById('login-error').textContent = 'Error de conexión'; document.getElementById('login-error').style.display = 'block' }
     }
+    function toggleUserMenu(ev) {
+      ev.stopPropagation();
+      document.getElementById('user-dd').classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      const dd = document.getElementById('user-dd');
+      if (dd) dd.classList.remove('open');
+    });
     function logout() {
       t = ''; currentUser = null; document.getElementById('main').style.display = 'none'; document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('user-info').style.display = 'none'; document.getElementById('login-error').style.display = 'none'
+      const dd = document.getElementById('user-dd'); if (dd) dd.classList.remove('open');
+      document.getElementById('login-error').style.display = 'none'
     }
     function togSide() {
       document.getElementById('sidebar').classList.toggle('open');
@@ -5434,7 +5574,9 @@
       if (v === 'deception') loadDeception();
       else if (_dcnTimer) { clearInterval(_dcnTimer); _dcnTimer = null;
         const ab = document.getElementById('dcn-auto');
-        if (ab) { ab.textContent = '⏱ Auto: OFF'; ab.classList.remove('btn-p'); ab.classList.add('btn-o'); } }
+        if (ab) { const sp = ab.querySelector('span'); if (sp) sp.textContent = 'Auto: OFF';
+          ab.classList.remove('btn-p'); ab.classList.add('btn-o'); } }
+      if (v === 'monitoring') loadMonitoring();
       if (v === 'maintenance') loadMaint();
       if (v === 'apikeys') loadKeys();
       if (v === 'compliance') loadCompliance();
@@ -5484,19 +5626,21 @@
 
         const badge = document.getElementById('dcn-engine');
         if (badge) {
-          badge.textContent = st.running ? `🟢 ${st.count} listeners` : (st.enabled ? '⚪ detenido' : '⛔ deshabilitado');
+          badge.innerHTML = st.running
+            ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:5px"></span>${st.count} listeners`
+            : (st.enabled ? 'detenido' : 'deshabilitado');
           badge.style.background = st.running ? 'var(--green-bg)' : '#202124';
         }
         const sb = document.getElementById('sb-dcn');
         if (sb) sb.textContent = stats.events_total || 0;
 
         document.getElementById('dcn-stats').innerHTML = [
-          ['Eventos', stats.events_total || 0, '🎯'],
-          ['Atacantes únicos', stats.attackers_unique || 0, '🕵️'],
-          ['Dispositivos señuelo', stats.devices || 0, '🖧'],
-          ['Sesiones', (sessions || []).length, '🔗'],
-        ].map(([label, value, icon]) => `<div class="sc" style="display:flex;align-items:center;gap:12px;padding:14px 18px;flex:1;min-width:150px">
-            <div style="font-size:20px">${icon}</div>
+          ['Eventos', stats.events_total || 0, 'target'],
+          ['Atacantes únicos', stats.attackers_unique || 0, 'eye'],
+          ['Dispositivos señuelo', stats.devices || 0, 'server'],
+          ['Sesiones', (sessions || []).length, 'link'],
+        ].map(([label, value, ic]) => `<div class="sc" style="display:flex;align-items:center;gap:12px;padding:14px 18px;flex:1;min-width:150px">
+            <div style="color:var(--accent)">${icon(ic, 'ic-lg')}</div>
             <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${label}</div>
             <div style="font-size:22px;font-weight:700">${value}</div></div></div>`).join('');
 
@@ -5526,10 +5670,10 @@
             ${devs.map(d => {
               const hits = counts[d.id] || 0;
               const border = hits > 10 ? 'var(--red)' : (hits > 0 ? '#f59e0b' : 'var(--border)');
-              return `<div style="border-left:3px solid ${border};background:var(--elevated);border-radius:6px;padding:8px 10px;position:relative">
-                <button onclick="dcnDelDevice('${esc(d.id)}')" title="Eliminar"
-                  style="position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-ter);cursor:pointer;font-size:12px">✕</button>
-                <div style="font-size:13px">${DCN_ROLE_ICON[d.role] || '❔'} <b>${esc(d.id)}</b></div>
+              return `<div onclick="dcnDeviceDetail('${esc(d.id)}')" style="border-left:3px solid ${border};background:var(--elevated);border-radius:6px;padding:8px 10px;position:relative;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='${border}'">
+                <button onclick="event.stopPropagation();dcnDelDevice('${esc(d.id)}')" title="Eliminar"
+                  style="position:absolute;top:4px;right:6px;background:none;border:none;color:var(--text-ter);cursor:pointer"><svg class="ic ic-sm" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+                <div style="font-size:13px;display:flex;align-items:center;gap:6px"><span style="color:var(--accent)">${icon(ROLE_ICON[d.role] || 'globe', 'ic-sm')}</span> <b>${esc(d.id)}</b></div>
                 <div style="font-size:10px;color:var(--text-ter);font-family:var(--mono)">${esc(d.ip || '')}</div>
                 <div style="margin-top:4px;font-size:10px;color:var(--text-secondary)">${(d.services || []).map(s => esc(s.proto)).join(' · ')}</div>
                 <div style="margin-top:4px;font-size:11px;color:${hits > 0 ? '#f59e0b' : 'var(--text-ter)'}">${hits} evento(s)</div>
@@ -5540,7 +5684,7 @@
         // Blocklist
         document.getElementById('dcn-blocklist').innerHTML = (blocklist || []).length
           ? blocklist.map(b => `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
-              <span style="font-family:var(--mono);font-size:12px;color:var(--red)">🚫 ${esc(b.ip)}</span>
+              <span style="font-family:var(--mono);font-size:12px;color:var(--red);display:inline-flex;align-items:center;gap:5px"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg> ${esc(b.ip)}</span>
               <span style="font-size:10px;color:var(--text-ter);flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.reason || '')}</span>
               <button class="btn btn-o btn-xs" style="padding:2px 6px;font-size:9px" onclick="dcnUnblock('${esc(b.ip)}')">quitar</button>
             </div>`).join('')
@@ -5569,7 +5713,7 @@
               <span style="font-family:var(--mono);font-size:12px">${esc(a.src_ip)}</span>
               <span style="display:flex;align-items:center;gap:6px">
                 <span class="badge" style="background:var(--accent-bg);color:var(--accent)">${a.count}</span>
-                <button class="btn btn-o btn-xs" style="padding:2px 6px;font-size:9px" title="Bloquear IP" onclick="dcnBlock('${esc(a.src_ip)}')">🚫</button>
+                <button class="btn btn-o btn-xs" style="padding:2px 6px;font-size:9px;display:inline-flex;align-items:center" title="Bloquear IP" onclick="dcnBlock('${esc(a.src_ip)}')"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="5.5" y1="5.5" x2="18.5" y2="18.5"/></svg></button>
               </span></div>`).join('')
           : '<div style="color:var(--text-ter);font-size:12px">Sin datos</div>';
         document.getElementById('dcn-devices').innerHTML = list(stats.top_devices, 'device_id');
@@ -5579,7 +5723,7 @@
           ? `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text-ter)">
               <th style="padding:6px">Dispositivo</th><th>Atacante</th><th>Proto</th><th>Eventos</th><th>Comandos</th><th>Última vez</th></tr></thead><tbody>
               ${sessions.map(s => `<tr style="border-top:1px solid var(--border)">
-                <td style="padding:6px;font-family:var(--mono)">${DCN_ROLE_ICON[(network.devices || []).find(d => d.id === s.device_id)?.role] || ''} ${esc(s.device_id)}</td>
+                <td style="padding:6px;font-family:var(--mono)"><span style="color:var(--accent);vertical-align:-2px">${icon(ROLE_ICON[(network.devices || []).find(d => d.id === s.device_id)?.role] || 'globe', 'ic-sm')}</span> ${esc(s.device_id)}</td>
                 <td style="font-family:var(--mono)">${esc(s.src_ip)}</td><td>${esc(s.proto)}</td>
                 <td>${s.event_count}</td>
                 <td>${s.command_count ? `<span class="badge" style="background:rgba(56,189,248,.18)">${s.command_count}</span>` : '0'}</td>
@@ -5632,16 +5776,17 @@
       } catch (e) { alert('Error: ' + e.message); }
     }
 
-    async function dcnSimulate() {
-      const btn = event?.target;
-      if (btn) { btn.disabled = true; btn.textContent = '⏳ Generando...'; }
+    async function dcnSimulate(ev) {
+      const btn = (ev && ev.target && ev.target.closest('button')) || (typeof event !== 'undefined' && event.target ? event.target.closest('button') : null);
+      const original = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
       try {
         const r = await fetch(`${A}/deception/simulate`, { method: 'POST', headers: h() });
         const d = await r.json().catch(() => ({}));
         if (!r.ok) { alert('Error: ' + (d.detail || r.status)); }
         await loadDeception();
       } catch (e) { alert('Error: ' + e.message); }
-      finally { if (btn) { btn.disabled = false; btn.textContent = '🧪 Simular ataque'; } }
+      finally { if (btn) { btn.disabled = false; btn.innerHTML = original; } }
     }
 
     async function dcnExport() {
@@ -5658,12 +5803,13 @@
 
     function dcnAutoToggle() {
       const b = document.getElementById('dcn-auto');
+      const sp = b.querySelector('span');
       if (_dcnTimer) {
         clearInterval(_dcnTimer); _dcnTimer = null;
-        b.textContent = '⏱ Auto: OFF'; b.classList.remove('btn-p'); b.classList.add('btn-o');
+        if (sp) sp.textContent = 'Auto: OFF'; b.classList.remove('btn-p'); b.classList.add('btn-o');
       } else {
         _dcnTimer = setInterval(loadDeception, 5000);
-        b.textContent = '⏱ Auto: ON'; b.classList.remove('btn-o'); b.classList.add('btn-p');
+        if (sp) sp.textContent = 'Auto: ON'; b.classList.remove('btn-o'); b.classList.add('btn-p');
       }
     }
 
@@ -5732,6 +5878,160 @@
         URL.revokeObjectURL(url);
       } catch (e) { alert('Error: ' + e.message); }
     }
+
+    // ── MONITORING (unificado) ────────────────────────────────
+    let _monTimer = null;
+
+    function monNum(v, suffix) {
+      if (v === null || v === undefined || isNaN(v)) return '—';
+      const n = Math.round(Number(v) * 10) / 10;
+      return n + (suffix || '');
+    }
+
+    function renderMonSpark(id, data) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const pts = (data && data.series && data.series[0] && data.series[0].points) || [];
+      if (!pts.length) { el.innerHTML = '<div style="color:var(--text-ter);font-size:12px">Sin datos</div>'; return; }
+      const max = Math.max(1, ...pts.map(p => p[1]));
+      el.innerHTML = pts.map(p => {
+        const h = Math.max(3, Math.round(p[1] / max * 60));
+        const col = p[1] > 85 ? 'var(--red)' : (p[1] > 70 ? '#f59e0b' : 'var(--accent)');
+        return `<div title="${new Date(p[0] * 1000).toLocaleTimeString()} — ${Math.round(p[1])}%"
+          style="flex:1;min-width:2px;height:${h}px;background:${col};border-radius:2px 2px 0 0;opacity:.85"></div>`;
+      }).join('');
+    }
+
+    function renderBars(id, items, color) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (!items || !items.length) { el.innerHTML = '<div style="color:var(--text-ter);font-size:12px">Sin datos</div>'; return; }
+      const max = Math.max(1, ...items.map(i => i.value));
+      el.innerHTML = items.map(i => `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+          <span style="color:var(--text-secondary)">${esc(i.label)}</span>
+          <span style="font-family:var(--mono);color:var(--text)">${Math.round(i.value)}</span>
+        </div>
+        <div style="height:7px;background:var(--surface);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${Math.round(i.value / max * 100)}%;background:${color};border-radius:4px"></div>
+        </div></div>`).join('');
+    }
+
+    async function loadMonitoring() {
+      try {
+        const ov = await fetch(`${A}/monitoring/overview`, { headers: h() }).then(r => r.json()).catch(() => ({}));
+        const svc = ov.services || {};
+        document.getElementById('mon-services').innerHTML = Object.entries(svc).map(([name, s]) =>
+          `<div class="sc" style="display:flex;align-items:center;gap:8px;padding:8px 14px">
+            <span style="width:9px;height:9px;border-radius:50%;background:${s.up ? 'var(--green)' : 'var(--red)'}"></span>
+            <b style="font-size:12px;text-transform:capitalize">${esc(name)}</b>
+            <span style="font-size:11px;color:var(--text-ter)">:${(s.url || '').split(':').pop()}</span>
+          </div>`).join('');
+
+        const m = ov.metrics || {};
+        document.getElementById('mon-cards').innerHTML = [
+          ['Host CPU', monNum(m.host_cpu, '%'), 'cpu'],
+          ['Host Memoria', monNum(m.host_mem, '%'), 'memory'],
+          ['Eventos deception', monNum(m.deception_events), 'target'],
+          ['Alertas deception', monNum(m.deception_alerts), 'alert'],
+          ['Dispositivos señuelo', monNum(m.deception_devices), 'server'],
+          ['Dispositivos up', (m.devices_up ?? '—') + '/' + (m.devices_total ?? '—'), 'link'],
+        ].map(([label, value, ic]) => `<div class="sc" style="display:flex;align-items:center;gap:12px;padding:14px 18px;flex:1;min-width:150px">
+            <div style="color:var(--accent)">${icon(ic, 'ic-lg')}</div>
+            <div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase">${label}</div>
+            <div style="font-size:22px;font-weight:700">${value}</div></div></div>`).join('');
+
+        // Paneles espejo de Grafana
+        const sevColor = s => s === 'critical' ? 'var(--red)' : (s === 'high' ? '#f59e0b' : 'var(--accent)');
+        renderBars('mon-events', (ov.events_by_type || []), 'var(--accent)');
+        const alerts = (ov.alerts_by_severity || []);
+        document.getElementById('mon-alerts').innerHTML = alerts.length
+          ? alerts.map(a => `<div style="margin-bottom:8px">
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+                <span style="color:var(--text-secondary);text-transform:capitalize">${esc(a.label)}</span>
+                <span style="font-family:var(--mono)">${Math.round(a.value)}</span></div>
+              <div style="height:7px;background:var(--surface);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${Math.round(a.value / Math.max(1, ...alerts.map(x => x.value)) * 100)}%;background:${sevColor(a.label)};border-radius:4px"></div>
+              </div></div>`).join('')
+          : '<div style="color:var(--text-ter);font-size:12px">Sin alertas</div>';
+
+        const targets = ov.targets || [];
+        document.getElementById('mon-targets').innerHTML = targets.length
+          ? `<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="text-align:left;color:var(--text-ter)">
+              <th style="padding:6px">job</th><th>URL</th><th>estado</th></tr></thead><tbody>
+              ${targets.map(t => `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:6px;font-family:var(--mono)">${esc(t.job || '')}</td>
+                <td style="font-family:var(--mono);color:var(--text-secondary)">${esc(t.url || '')}</td>
+                <td><span class="badge" style="background:${t.health === 'up' ? 'var(--green-bg)' : 'rgba(239,68,68,.2)'}">${esc(t.health || '?')}</span></td>
+              </tr>`).join('')}</tbody></table>`
+          : '<div style="color:var(--text-ter);font-size:12px">Sin targets (¿Prometheus apagado?)</div>';
+
+        const gUrl = (ov.links && ov.links.grafana_dashboard) || '';
+        const link = document.getElementById('mon-grafana-link');
+        if (link) link.href = gUrl || 'http://localhost:3000';
+        const ifr = document.getElementById('mon-grafana');
+        if (ifr && gUrl && !ifr.src) ifr.src = gUrl + '&refresh=10s';
+
+        const [cpu, mem, disk] = await Promise.all([
+          fetch(`${A}/monitoring/series?query=${encodeURIComponent('netpulse_host_cpu_percent')}&minutes=60`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/monitoring/series?query=${encodeURIComponent('netpulse_host_memory_percent')}&minutes=60`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+          fetch(`${A}/monitoring/series?query=${encodeURIComponent('max(netpulse_host_disk_percent)')}&minutes=60`, { headers: h() }).then(r => r.json()).catch(() => ({})),
+        ]);
+        renderMonSpark('mon-chart-cpu', cpu);
+        renderMonSpark('mon-chart-mem', mem);
+        renderMonSpark('mon-chart-disk', disk);
+      } catch (e) {
+        const el = document.getElementById('mon-targets');
+        if (el) el.innerHTML = '<div class="empty">Error cargando monitoring: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function monAutoToggle() {
+      const b = document.getElementById('mon-auto');
+      const sp = b.querySelector('span');
+      if (_monTimer) {
+        clearInterval(_monTimer); _monTimer = null;
+        if (sp) sp.textContent = 'Auto: OFF'; b.classList.remove('btn-p'); b.classList.add('btn-o');
+      } else {
+        _monTimer = setInterval(loadMonitoring, 15000);
+        if (sp) sp.textContent = 'Auto: ON'; b.classList.remove('btn-o'); b.classList.add('btn-p');
+      }
+    }
+
+    async function dcnDeviceDetail(id) {
+      try {
+        const [dev, events] = await Promise.all([
+          fetch(`${A}/deception/devices/${encodeURIComponent(id)}`, { headers: h() }).then(r => r.json()).catch(() => null),
+          fetch(`${A}/deception/events?device_id=${encodeURIComponent(id)}&limit=10`, { headers: h() }).then(r => r.json()).catch(() => []),
+        ]);
+        if (!dev || !dev.id) { alert('Dispositivo no encontrado'); return; }
+        const p = dev.persona || {};
+        document.getElementById('dcn-m-icon').innerHTML = icon(ROLE_ICON[dev.role] || 'globe', 'ic-lg');
+        document.getElementById('dcn-m-title').textContent = dev.id;
+        document.getElementById('dcn-m-sub').textContent = `${dev.role} · ${dev.ip || ''} · ${dev.segment || ''}`;
+        const svc = (dev.services || []).map(s =>
+          `<div class="kv"><span class="k">${esc(s.proto)}</span><span class="v">:${s.port} · ${esc(s.engine || 'native')}${s.banner ? ' · ' + esc(s.banner) : ''}</span></div>`).join('')
+          || '<div style="color:var(--text-ter);font-size:12px">Sin servicios</div>';
+        const evs = (events || []).map(e =>
+          `<div class="kv"><span class="k">${esc((e.timestamp || '').slice(11, 19))} · ${esc(e.src_ip)}</span><span class="v">${esc(e.type)}</span></div>`).join('')
+          || '<div style="color:var(--text-ter);font-size:12px">Sin eventos</div>';
+        document.getElementById('dcn-m-body').innerHTML = `
+          <div class="sect">Identidad</div>
+          <div class="kv"><span class="k">Fabricante</span><span class="v">${esc(p.vendor || '—')}</span></div>
+          <div class="kv"><span class="k">Sistema operativo</span><span class="v">${esc(p.os || '—')}</span></div>
+          <div class="kv"><span class="k">Hostname</span><span class="v">${esc(p.hostname || '—')}</span></div>
+          <div class="kv"><span class="k">MAC</span><span class="v">${esc(p.mac || '—')}</span></div>
+          <div class="sect">Red</div>
+          <div class="kv"><span class="k">Segmento</span><span class="v">${esc(dev.segment || '—')}</span></div>
+          <div class="kv"><span class="k">IP</span><span class="v">${esc(dev.ip || '—')}</span></div>
+          <div class="kv"><span class="k">Estado</span><span class="v">${dev.enabled ? 'habilitado' : 'deshabilitado'}</span></div>
+          <div class="sect">Servicios</div>${svc}
+          <div class="sect">Últimos eventos</div>${evs}`;
+        document.getElementById('dcn-modal').classList.add('open');
+      } catch (e) { alert('Error: ' + e.message); }
+    }
+
+    function dcnCloseModal() { document.getElementById('dcn-modal').classList.remove('open'); }
 
     // ── TOPOLOGY ──────────────────────────────────────────────
     async function loadTopology() {
@@ -5919,6 +6219,24 @@
       } catch (e) { }
     }
   </script>
+
+  <div class="modal-overlay" id="dcn-modal" onclick="if(event.target===this)dcnCloseModal()">
+    <div class="modal">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="dcn-m-icon" style="color:var(--accent)"></span>
+          <div>
+            <div class="modal-title" id="dcn-m-title">&#8212;</div>
+            <div class="modal-sub" id="dcn-m-sub"></div>
+          </div>
+        </div>
+        <button class="modal-x" onclick="dcnCloseModal()" title="Cerrar">
+          <svg class="ic" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18" /><line x1="18" y1="6" x2="6" y2="18" /></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="dcn-m-body"></div>
+    </div>
+  </div>
 </body>
 
 </html>

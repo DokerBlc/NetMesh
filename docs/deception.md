@@ -204,7 +204,40 @@ NETPULSE_DECEPTION_BRUTE_FORCE_WINDOW=60
 Sección **DECEPTION** en el sidebar: estado del motor, botones de
 arranque/parada, tarjetas (eventos, atacantes únicos, dispositivos,
 sesiones), panel de **alertas recientes**, top atacantes/dispositivos,
-tabla de sesiones y últimos eventos. Se recarga con `loadDeception()`.
+tabla de sesiones y últimos eventos. Al hacer clic en un dispositivo se
+abre su **detalle con configuración** (persona, servicios, segmento) y
+sus últimos eventos. Se recarga con `loadDeception()`.
+
+Sección **MONITORING** (unificada): estado de Prometheus/Loki/Grafana/
+Alertmanager, tarjetas de métricas, gráficos de host (CPU/RAM/disco),
+paneles espejo de Grafana (eventos por tipo, alertas por severidad),
+targets de Prometheus y el **dashboard de Grafana incrustado**. Backend:
+`/api/monitoring/overview` y `/api/monitoring/series`.
+
+Iconografía con **SVG** (sin emojis) y diseño responsive.
+
+## Reducción de falsos positivos
+
+Alertar por cada interacción genera ruido. Para que sea profesional:
+
+- **Allowlist** (`allowlist_svc.py`, `deception/allowlist.json`): IPs o
+  rangos CIDR de confianza (red de gestión, escáneres propios) que **no**
+  generan alertas. `POST /api/deception/allowlist`.
+- **Clasificación de origen** en los IOCs: `public` / `internal` / `lab`
+  (loopback). El origen `lab` es siempre `info` (no amenaza).
+- **Puntuación de amenaza** por evidencia (eventos + login + comandos
+  sensibles) en vez de marcar `high` ante cualquier interacción.
+- **Supresión de loopback** (127.0.0.0/8) y de eventos simulados:
+
+```
+NETPULSE_DECEPTION_ALERT_IGNORE_SIMULATED=true
+NETPULSE_DECEPTION_ALERT_IGNORE_LOOPBACK=true
+NETPULSE_DECEPTION_ALERT_IGNORE_PRIVATE=false
+```
+
+Herramientas complementarias para producción (integración futura):
+**GeoLite2** (reputación/geo offline), **Suricata/Wazuh** (IDS),
+**fail2ban** (bloqueo por umbral), **MISP** (compartir IOCs).
 
 ## Blocklist e IOCs (Fase G/H)
 

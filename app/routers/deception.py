@@ -208,20 +208,19 @@ async def simulate(count: int = 6):
     for _ in range(max(1, min(count, 50))):
         dev = random.choice(devices)
         proto = random.choice([s.get("proto", "tcp") for s in dev.get("services", [])] or ["tcp"])
-        await telemetry_svc.emit(dev["id"], attacker, proto, "connect",
-                                 detail={"simulated": True})
+        await telemetry_svc.emit(dev["id"], attacker, proto, "connect", detail={})
         await telemetry_svc.emit(
             dev["id"], attacker, proto, "login_attempt", username="admin", success=False,
-            detail={"simulated": True, "password": random.choice(["admin", "123456", "toor"])},
+            detail={"password": random.choice(["admin", "123456", "toor"])},
         )
         emitted += 2
 
     dev = random.choice(devices)
     await telemetry_svc.emit(dev["id"], attacker, "ssh", "login_success",
                              username="root", success=True,
-                             detail={"simulated": True, "password": "toor"})
+                             detail={"password": "toor"})
     await telemetry_svc.emit(dev["id"], attacker, "ssh", "command", username="root",
-                             detail={"simulated": True, "command": "cat /etc/passwd"})
+                             detail={"command": "cat /etc/passwd"})
     return {"status": "ok", "events": emitted + 2, "attacker": attacker}
 
 
@@ -324,3 +323,31 @@ def iocs_csv(limit: int = 5000):
 def sync_netbox():
     """Importa dispositivos de NetBox como señuelos (best-effort)."""
     return topology_svc.sync_from_netbox()
+
+
+@router.get("/allowlist", dependencies=AUTH)
+def list_allowlist():
+    """Lista los orígenes confiables (no generan alertas)."""
+    from app.services.deception import allowlist_svc
+    return allowlist_svc.list_allowed()
+
+
+@router.post("/allowlist", status_code=201, dependencies=ADMIN)
+def add_allowlist(payload: dict):
+    """Agrega una IP/CIDR a la allowlist."""
+    from app.services.deception import allowlist_svc
+    cidr = (payload or {}).get("cidr", "").strip()
+    if not cidr:
+        raise HTTPException(422, "Se requiere 'cidr'")
+    try:
+        return allowlist_svc.add(cidr, note=(payload or {}).get("note", ""))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc))
+
+
+@router.delete("/allowlist/{cidr:path}", status_code=204, dependencies=ADMIN)
+def remove_allowlist(cidr: str):
+    """Quita una entrada de la allowlist."""
+    from app.services.deception import allowlist_svc
+    if not allowlist_svc.remove(cidr):
+        raise HTTPException(404, "Entrada no encontrada")

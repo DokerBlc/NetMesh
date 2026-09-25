@@ -11,7 +11,7 @@ route:
 receivers:
   - name: 'netpulse-webhook'
     webhook_configs:
-      - url: 'http://127.0.0.1:8082/api/alerts/webhook'
+      - url: 'http://host.docker.internal:8082/api/alerts/webhook'
         send_resolved: true
         http_config:
           authorization:

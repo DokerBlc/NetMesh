@@ -67,6 +67,20 @@ DECEPTION_AUTOBLOCK_CRITICAL = os.getenv(
     "NETPULSE_DECEPTION_AUTOBLOCK_CRITICAL", "false"
 ).lower() == "true"
 
+# ── Reducción de falsos positivos ────────────────────────────
+# Ignorar eventos marcados como simulados (botón "Simular ataque").
+DECEPTION_ALERT_IGNORE_SIMULATED = os.getenv(
+    "NETPULSE_DECEPTION_ALERT_IGNORE_SIMULATED", "true"
+).lower() == "true"
+# Ignorar origen loopback (127.0.0.0/8, ::1): pruebas internas, no ataques.
+DECEPTION_ALERT_IGNORE_LOOPBACK = os.getenv(
+    "NETPULSE_DECEPTION_ALERT_IGNORE_LOOPBACK", "true"
+).lower() == "true"
+# Ignorar rangos privados (RFC1918) como origen: red interna de confianza.
+DECEPTION_ALERT_IGNORE_PRIVATE = os.getenv(
+    "NETPULSE_DECEPTION_ALERT_IGNORE_PRIVATE", "false"
+).lower() == "true"
+
 API_TITLE = "NetPulse API"
 API_VERSION = "1.0.0"
 API_HOST = os.getenv("NETPULSE_HOST", "0.0.0.0")
