@@ -101,10 +101,20 @@ def lookup(ip: str) -> Optional[dict]:
         result = {
             "country_code": country.iso_code,
             "country": country.name or country.iso_code,
+            "subdivision": None,
+            "subdivision_code": None,
             "city": None,
             "lat": None,
             "lon": None,
         }
+        try:
+            subdivisions = getattr(resp, "subdivisions", None)
+            most = getattr(subdivisions, "most_specific", None) if subdivisions else None
+            if most is not None:
+                result["subdivision"] = most.name
+                result["subdivision_code"] = most.iso_code
+        except Exception:  # noqa: BLE001
+            pass
         city = getattr(resp, "city", None)
         if city is not None:
             result["city"] = city.name

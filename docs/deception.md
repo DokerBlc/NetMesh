@@ -247,7 +247,9 @@ Herramientas complementarias para producción (integración futura):
 - **Mapa global** en el dashboard: puntos **rojos** = origen de los
   ataques (geolocalizados, tamaño por nº de eventos), punto **verde** =
   centro de datos objetivo y **líneas de trayectoria animadas** desde cada
-  atacante al objetivo. Mapa vectorial propio
+  atacante al objetivo. **Zoom con rueda / botones y arrastre (pan)**, y
+  tabla de orígenes con **país, estado/región, ciudad**, eventos y acción
+  de bloqueo. Mapa vectorial propio
   (`app/static/world.geo.json`, Natural Earth, dominio público), sin tiles
   externos. Datos: `GET /api/deception/geo`.
 - **Simulación multi-país**: `POST /api/deception/simulate?country=US`

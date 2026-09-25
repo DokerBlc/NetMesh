@@ -78,6 +78,7 @@ def attack_map(limit: int = 3000) -> dict:
             "last_seen": a["last"],
             "country_code": geo.get("country_code"),
             "country": geo.get("country"),
+            "subdivision": geo.get("subdivision"),
             "city": geo.get("city"),
             "lat": geo["lat"],
             "lon": geo["lon"],
