@@ -245,10 +245,14 @@ Herramientas complementarias para producción (integración futura):
   MaxMind local. Por defecto usa la incluida en `maxminddb-geolite2`
   (sin servicios externos); se puede apuntar otra con `NETPULSE_GEOIP_DB`.
 - **Mapa global** en el dashboard: puntos **rojos** = origen de los
-  ataques (geolocalizados, tamaño por nº de eventos) y punto **verde** =
-  centro de datos objetivo (`NETPULSE_DATACENTER_LAT/LON/NAME`). Mapa
-  vectorial propio (`app/static/world.geo.json`, Natural Earth, dominio
-  público), sin tiles externos. Datos: `GET /api/deception/geo`.
+  ataques (geolocalizados, tamaño por nº de eventos), punto **verde** =
+  centro de datos objetivo y **líneas de trayectoria animadas** desde cada
+  atacante al objetivo. Mapa vectorial propio
+  (`app/static/world.geo.json`, Natural Earth, dominio público), sin tiles
+  externos. Datos: `GET /api/deception/geo`.
+- **Simulación multi-país**: `POST /api/deception/simulate?country=US`
+  (códigos: US, DE, GB, FR, JP, BR, IN, CN, RU, AU, CA, MX, NL, SG, ZA,
+  KR). El botón **Global** del dashboard simula ataques desde todos.
 - **Firewall** (`firewall_svc.py`): traduce la IP a una regla del firewall
   local (pf en macOS, nftables/iptables en Linux, netsh en Windows). Por
   defecto es **dry-run** (registra en blocklist y devuelve el comando);

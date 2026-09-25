@@ -193,17 +193,25 @@ def events_csv(limit: int = 1000):
 
 
 @router.post("/simulate", dependencies=ADMIN)
-async def simulate(count: int = 6):
-    """Genera actividad de atacante simulada (para demos y pruebas de UI)."""
-    from app.services.deception import telemetry_svc, topology_svc
+async def simulate(count: int = 6, country: Optional[str] = None):
+    """Genera actividad de atacante simulada (para demos y pruebas de UI).
+
+    Args:
+        count: bloques de eventos a generar.
+        country: código ISO-2 para atacar desde un país concreto
+            (US, DE, GB, FR, JP, BR, IN, CN, RU, AU, CA, MX, NL, SG, ZA, KR).
+    """
+    from app.services.deception import geo_svc, telemetry_svc, topology_svc
 
     devices = [d for d in topology_svc.list_devices() if d.get("enabled", True)]
     if not devices:
         raise HTTPException(409, "No hay dispositivos señuelo habilitados")
 
-    attacker = random.choice(
-        ["203.0.113.7", "198.51.100.23", "192.0.2.55", "45.155.205.233", "185.220.101.4"]
-    )
+    sources = geo_svc.source_ips(country)
+    if not sources:
+        raise HTTPException(422, f"País sin fuentes de ataque: {country}")
+    attacker, cc = random.choice(sources)
+
     emitted = 0
     for _ in range(max(1, min(count, 50))):
         dev = random.choice(devices)
@@ -221,7 +229,7 @@ async def simulate(count: int = 6):
                              detail={"password": "toor"})
     await telemetry_svc.emit(dev["id"], attacker, "ssh", "command", username="root",
                              detail={"command": "cat /etc/passwd"})
-    return {"status": "ok", "events": emitted + 2, "attacker": attacker}
+    return {"status": "ok", "events": emitted + 2, "attacker": attacker, "country": cc}
 
 
 @router.get("/stats", dependencies=AUTH)

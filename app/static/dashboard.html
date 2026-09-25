@@ -3049,6 +3049,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <button class="btn btn-p btn-sm icbtn" onclick="dcnSimulate(event)" title="Genera actividad de atacante de prueba"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg> Simular ataque</button>
+            <button class="btn btn-o btn-sm icbtn" onclick="dcnSimulateGlobal(event)" title="Simula ataques desde varios países"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/></svg> Global</button>
             <button class="btn btn-o btn-sm icbtn" onclick="dcnExport()"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7 10 12 15 17 10"/><path d="M3 21h18"/></svg> CSV</button>
             <button class="btn btn-o btn-sm icbtn" id="dcn-auto" onclick="dcnAutoToggle()" title="Auto-actualizar cada 5s"><svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="9" y1="2" x2="15" y2="2"/></svg> <span>Auto: OFF</span></button>
             <span style="width:1px;height:20px;background:var(--border)"></span>
@@ -5673,22 +5674,42 @@
       else parts.push('<text x="500" y="250" fill="#64748b" font-size="14" text-anchor="middle">Mapa no disponible</text>');
 
       const t = (geo && geo.target) || {};
-      if (t.lat !== undefined && (t.lat !== 0 || t.lon !== 0)) {
-        const p = dcnProj(t.lon, t.lat);
-        parts.push(`<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#22c55e" opacity="0.25"><animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite"/></circle>`);
-        parts.push(`<circle cx="${p[0]}" cy="${p[1]}" r="4.5" fill="#22c55e" stroke="#065f46" stroke-width="1"><title>${esc(t.name || 'Data Center')}</title></circle>`);
+      const hasTarget = t.lat !== undefined && (t.lat !== 0 || t.lon !== 0);
+      const target = hasTarget ? dcnProj(t.lon, t.lat) : null;
+      const points = (geo && geo.points) || [];
+
+      // Líneas de trayectoria atacante -> objetivo (curvas animadas)
+      if (target) {
+        for (const p of points) {
+          const a = dcnProj(p.lon, p.lat);
+          const midX = (a[0] + target[0]) / 2;
+          const midY = (a[1] + target[1]) / 2 - Math.abs(a[0] - target[0]) * 0.18 - 12;
+          const op = Math.min(0.75, 0.28 + Math.log2(p.count + 1) * 0.12);
+          parts.push(`<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${midX.toFixed(1)} ${midY.toFixed(1)} ${target[0].toFixed(1)} ${target[1].toFixed(1)}"
+            fill="none" stroke="#ef4444" stroke-opacity="${op.toFixed(2)}" stroke-width="1.4"
+            stroke-dasharray="6 5" stroke-linecap="round">
+            <animate attributeName="stroke-dashoffset" from="22" to="0" dur="1.4s" repeatCount="indefinite"/>
+          </path>`);
+        }
       }
 
-      for (const p of (geo && geo.points) || []) {
+      // Objetivo (verde)
+      if (target) {
+        parts.push(`<circle cx="${target[0]}" cy="${target[1]}" r="9" fill="#22c55e" opacity="0.25"><animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite"/></circle>`);
+        parts.push(`<circle cx="${target[0]}" cy="${target[1]}" r="4.5" fill="#22c55e" stroke="#065f46" stroke-width="1"><title>${esc(t.name || 'Data Center')}</title></circle>`);
+      }
+
+      // Orígenes (rojo)
+      for (const p of points) {
         const xy = dcnProj(p.lon, p.lat);
         const r = Math.min(14, 3 + Math.log2(p.count + 1) * 1.6);
-        parts.push(`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r.toFixed(1)}" fill="#ef4444" opacity="0.72" stroke="#7f1d1d" stroke-width="0.8"><title>${esc(p.ip)} — ${esc(p.country || '?')} (${p.count} eventos)</title></circle>`);
+        parts.push(`<circle cx="${xy[0]}" cy="${xy[1]}" r="${r.toFixed(1)}" fill="#ef4444" opacity="0.85" stroke="#7f1d1d" stroke-width="0.8"><title>${esc(p.ip)} — ${esc(p.country || '?')} (${p.count} eventos)</title></circle>`);
       }
       svg.innerHTML = parts.join('');
 
       const info = document.getElementById('dcn-map-info');
       if (info) info.textContent = geo
-        ? `${(geo.points || []).length} origen(es) · ${geo.total || 0} eventos${geo.geoip ? '' : ' · GeoIP off'}`
+        ? `${points.length} origen(es) · ${geo.total || 0} eventos${geo.geoip ? '' : ' · GeoIP off'}`
         : '';
     }
 
@@ -5891,6 +5912,20 @@
         const r = await fetch(`${A}/deception/simulate`, { method: 'POST', headers: h() });
         const d = await r.json().catch(() => ({}));
         if (!r.ok) { alert('Error: ' + (d.detail || r.status)); }
+        await loadDeception();
+      } catch (e) { alert('Error: ' + e.message); }
+      finally { if (btn) { btn.disabled = false; btn.innerHTML = original; } }
+    }
+
+    async function dcnSimulateGlobal(ev) {
+      const btn = (ev && ev.target) ? ev.target.closest('button') : null;
+      const original = btn ? btn.innerHTML : '';
+      if (btn) { btn.disabled = true; btn.textContent = 'Generando...'; }
+      const countries = ['US', 'DE', 'GB', 'FR', 'JP', 'BR', 'IN', 'CN', 'RU', 'AU', 'CA', 'MX', 'NL', 'SG', 'ZA', 'KR'];
+      try {
+        for (const c of countries) {
+          await fetch(`${A}/deception/simulate?count=2&country=${c}`, { method: 'POST', headers: h() });
+        }
         await loadDeception();
       } catch (e) { alert('Error: ' + e.message); }
       finally { if (btn) { btn.disabled = false; btn.innerHTML = original; } }
