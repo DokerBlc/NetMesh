@@ -5651,7 +5651,9 @@
       return _dcnWorld;
     }
 
+    let _dcnWorldPathCache = null;
     function dcnWorldPath(world) {
+      if (_dcnWorldPathCache) return _dcnWorldPathCache;
       if (!world) return '';
       const parts = [];
       for (const f of world.features || []) {
@@ -5661,25 +5663,31 @@
         for (const poly of polys) {
           for (const ring of poly) {
             if (!ring || !ring.length) continue;
+            const step = ring.length > 150 ? 2 : 1;
             let d = '';
-            for (let i = 0; i < ring.length; i++) {
+            for (let i = 0; i < ring.length; i += step) {
               const pt = dcnProj(ring[i][0], ring[i][1]);
-              d += (i ? 'L' : 'M') + pt[0].toFixed(1) + ' ' + pt[1].toFixed(1);
+              d += (d ? 'L' : 'M') + pt[0].toFixed(1) + ' ' + pt[1].toFixed(1);
             }
             parts.push(d + 'Z');
           }
         }
       }
-      return parts.join(' ');
+      _dcnWorldPathCache = parts.join(' ');
+      return _dcnWorldPathCache;
     }
 
     let _dcnView = { x: 0, y: 0, w: 1000, h: 500 };
     let _dcnMapBound = false;
 
+    let _dcnRaf = null;
     function dcnApplyView() {
-      const svg = document.getElementById('dcn-map');
-      if (!svg) return;
-      svg.setAttribute('viewBox', `${_dcnView.x} ${_dcnView.y} ${_dcnView.w} ${_dcnView.h}`);
+      if (_dcnRaf) return;
+      _dcnRaf = requestAnimationFrame(() => {
+        _dcnRaf = null;
+        const svg = document.getElementById('dcn-map');
+        if (svg) svg.setAttribute('viewBox', `${_dcnView.x} ${_dcnView.y} ${_dcnView.w} ${_dcnView.h}`);
+      });
     }
 
     function dcnClampView() {
@@ -5716,20 +5724,25 @@
         v.x = mx - px * v.w; v.y = my - py * v.h;
         dcnClampView(); dcnApplyView();
       }, { passive: false });
-      let dragging = false, last = null;
-      svg.addEventListener('pointerdown', (e) => { dragging = true; last = [e.clientX, e.clientY]; svg.style.cursor = 'grabbing'; });
+
+      let dragging = false, last = null, rect = null;
+      svg.addEventListener('pointerdown', (e) => {
+        dragging = true; last = [e.clientX, e.clientY];
+        rect = svg.getBoundingClientRect();
+        svg.style.cursor = 'grabbing';
+        try { svg.setPointerCapture(e.pointerId); } catch (err) { }
+      });
       svg.addEventListener('pointermove', (e) => {
-        if (!dragging) return;
-        const rect = svg.getBoundingClientRect();
+        if (!dragging || !rect) return;
         const dx = (e.clientX - last[0]) / rect.width * _dcnView.w;
         const dy = (e.clientY - last[1]) / rect.height * _dcnView.h;
         _dcnView.x -= dx; _dcnView.y -= dy;
         last = [e.clientX, e.clientY];
         dcnClampView(); dcnApplyView();
       });
-      const stop = () => { dragging = false; svg.style.cursor = 'grab'; };
+      const stop = () => { dragging = false; rect = null; svg.style.cursor = 'grab'; };
       svg.addEventListener('pointerup', stop);
-      svg.addEventListener('pointerleave', stop);
+      svg.addEventListener('pointercancel', stop);
     }
 
     function dcnRenderMapTable(points) {
@@ -5756,7 +5769,8 @@
       dcnMapBind();
       const world = await dcnEnsureWorld();
       const parts = [];
-      if (world) parts.push(`<path d="${dcnWorldPath(world)}" fill="#1f2733" stroke="#334155" stroke-width="0.5" vector-effect="non-scaling-stroke"/>`);
+      const NSS = 'shape-rendering="optimizeSpeed" ';
+      if (world) parts.push(`<path ${NSS}d="${dcnWorldPath(world)}" fill="#1f2733" stroke="#334155" stroke-width="0.5" vector-effect="non-scaling-stroke"/>`);
       else parts.push('<text x="500" y="250" fill="#64748b" font-size="14" text-anchor="middle">Mapa no disponible</text>');
 
       const t = (geo && geo.target) || {};
@@ -5764,7 +5778,7 @@
       const target = hasTarget ? dcnProj(t.lon, t.lat) : null;
       const points = (geo && geo.points) || [];
 
-      // Trayectorias atacante -> objetivo
+      // Trayectorias atacante -> objetivo (líneas estáticas)
       if (target) {
         for (const p of points) {
           const a = dcnProj(p.lon, p.lat);
@@ -5773,13 +5787,12 @@
           const op = Math.min(0.8, 0.3 + Math.log2(p.count + 1) * 0.12);
           parts.push(`<path d="M${a[0].toFixed(1)} ${a[1].toFixed(1)} Q${midX.toFixed(1)} ${midY.toFixed(1)} ${target[0].toFixed(1)} ${target[1].toFixed(1)}"
             fill="none" stroke="#ef4444" stroke-opacity="${op.toFixed(2)}" stroke-width="1.4" vector-effect="non-scaling-stroke"
-            stroke-dasharray="6 5" stroke-linecap="round">
-            <animate attributeName="stroke-dashoffset" from="22" to="0" dur="1.4s" repeatCount="indefinite"/></path>`);
+            stroke-dasharray="6 5" stroke-linecap="round"/>`);
         }
       }
 
       if (target) {
-        parts.push(`<circle cx="${target[0]}" cy="${target[1]}" r="9" fill="#22c55e" opacity="0.25" vector-effect="non-scaling-stroke"><animate attributeName="r" values="6;14;6" dur="2s" repeatCount="indefinite"/></circle>`);
+        parts.push(`<circle cx="${target[0]}" cy="${target[1]}" r="9" fill="#22c55e" opacity="0.22"/>`);
         parts.push(`<circle cx="${target[0]}" cy="${target[1]}" r="4.5" fill="#22c55e" stroke="#065f46" stroke-width="1.2" vector-effect="non-scaling-stroke"><title>${esc(t.name || 'Data Center')}</title></circle>`);
       }
 
